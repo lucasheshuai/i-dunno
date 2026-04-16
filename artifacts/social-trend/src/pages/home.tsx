@@ -1,5 +1,5 @@
 import { useLocation, Link } from "wouter";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetTodayQuestion, getGetTodayQuestionQueryKey, useGetStats, getGetStatsQueryKey, useListQuestions, getListQuestionsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,10 +34,6 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-16 pb-12 w-full max-w-3xl mx-auto px-4 pt-12 md:pt-24">
       <section className="flex flex-col items-center text-center gap-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
-          <Sparkles className="w-4 h-4" />
-          The Social Mirror
-        </div>
         <h1 className="text-4xl md:text-6xl font-serif font-bold tracking-tight text-balance leading-tight">
           How well do you know <br />
           <span className="text-primary italic">what everyone else thinks?</span>
