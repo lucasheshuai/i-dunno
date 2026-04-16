@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useUpdateDemographics } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { getSessionId, setOnboarded } from "@/lib/store";
+import { getSessionId, setOnboarded, setDemographicsShared, saveDemographics } from "@/lib/store";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -32,6 +32,7 @@ export default function Onboarding() {
 
   const handleFinish = (finalRelationship: string) => {
     const data = { ...demographics, relationshipStatus: finalRelationship };
+    saveDemographics(data);
     updateMutation.mutate({
       data: {
         sessionId: getSessionId(),
@@ -43,6 +44,7 @@ export default function Onboarding() {
     }, {
       onSuccess: () => {
         setOnboarded();
+        setDemographicsShared();
         setLocation(returnTo);
       },
       onError: () => {
@@ -51,6 +53,7 @@ export default function Onboarding() {
           variant: "destructive"
         });
         setOnboarded();
+        setDemographicsShared();
         setLocation(returnTo);
       }
     });

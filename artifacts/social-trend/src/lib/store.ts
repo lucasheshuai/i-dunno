@@ -16,6 +16,33 @@ export const setOnboarded = () => {
   localStorage.setItem('st_onboarded', 'true');
 };
 
+export const hasSharedDemographics = () => {
+  return localStorage.getItem('st_demographics_shared') === 'true';
+};
+
+export const setDemographicsShared = () => {
+  localStorage.setItem('st_demographics_shared', 'true');
+};
+
+export interface Demographics {
+  ageRange?: string;
+  gender?: string;
+  region?: string;
+  relationshipStatus?: string;
+}
+
+export const getDemographics = (): Demographics => {
+  try {
+    return JSON.parse(localStorage.getItem('st_demographics') || '{}');
+  } catch {
+    return {};
+  }
+};
+
+export const saveDemographics = (d: Demographics) => {
+  localStorage.setItem('st_demographics', JSON.stringify(d));
+};
+
 export const getAnsweredQuestions = (): Record<string, boolean> => {
   try {
     return JSON.parse(localStorage.getItem('st_answered') || '{}');

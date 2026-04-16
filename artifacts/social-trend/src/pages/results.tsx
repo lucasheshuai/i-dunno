@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from "recharts";
 import { ArrowRight, Info, CheckCircle2, XCircle } from "lucide-react";
-import { getFlowState, hasOnboarded } from "@/lib/store";
+import { getFlowState, hasOnboarded, hasSharedDemographics } from "@/lib/store";
 import { useEffect } from "react";
 
 export default function ResultsPage() {
@@ -141,8 +141,8 @@ export default function ResultsPage() {
         </Card>
       </div>
 
-      {/* Demographic Breakdown */}
-      {results.segments && results.segments.length > 0 && (
+      {/* Demographic Breakdown — only shown when user shared their demographics */}
+      {hasSharedDemographics() && results.segments && results.segments.length > 0 && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-serif font-bold">Demographic Splits</h2>
@@ -187,6 +187,22 @@ export default function ResultsPage() {
             })}
           </div>
         </div>
+      )}
+
+      {!hasSharedDemographics() && (
+        <Card className="border-dashed border-primary/30 bg-primary/5">
+          <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
+            <div className="flex flex-col gap-1">
+              <p className="font-semibold">See how different groups answered</p>
+              <p className="text-sm text-muted-foreground">Share your demographics to unlock Men vs Women, Single vs Married breakdowns.</p>
+            </div>
+            <Button className="shrink-0 whitespace-nowrap" asChild>
+              <Link href={`/onboarding?returnTo=/results/${id}`}>
+                Unlock Splits
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       <div className="mt-8 mb-12 flex justify-center">
