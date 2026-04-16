@@ -186,8 +186,8 @@ function NicknameDialog({
 export default function Leaderboard() {
   const sessionId = getSessionId();
   const [data, setData] = useState<LeaderboardData | null>(null);
-  const [loading, setLoading] = useState(false);
   const [showDialog, setShowDialog] = useState<boolean>(() => getNickname() === null);
+  const [loading, setLoading] = useState<boolean>(() => getNickname() !== null);
 
   function fetchLeaderboard() {
     setLoading(true);
@@ -215,10 +215,12 @@ export default function Leaderboard() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId, nickname: name }),
     }).catch(() => {});
+    setLoading(true);
     setShowDialog(false);
   }
 
   function handleSkip() {
+    setLoading(true);
     setShowDialog(false);
   }
 
