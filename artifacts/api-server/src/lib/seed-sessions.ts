@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import { sessions } from "./session-store";
 import { questions } from "./seed-data";
 
@@ -8,6 +7,15 @@ function makePrng(seed: number) {
     s = (Math.imul(1664525, s) + 1013904223) | 0;
     return (s >>> 0) / 0xffffffff;
   };
+}
+
+function fisherYatesShuffle<T>(rng: () => number, arr: T[]): T[] {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
 }
 
 function weightedPick<T>(rng: () => number, items: T[], weights: number[]): T {
@@ -74,13 +82,17 @@ function makePredictionWeights(options: string[], majorityIdx: number): number[]
 
 const activeQuestions = questions.filter((q) => q.status === "active");
 
+const SEED_EPOCH = new Date("2026-01-01T00:00:00.000Z").getTime();
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
 export function seedSessions(): void {
   const rng = makePrng(0xdeadbeef);
 
   const usedNicknames = new Set<string>();
 
   for (let i = 0; i < 300; i++) {
-    const sessionId = `seed_${String(i + 1).padStart(3, "0")}`;
+    const sessionIdx = i + 1;
+    const sessionId = `seed_${String(sessionIdx).padStart(3, "0")}`;
 
     let nickname: string | null = null;
     if (rng() < 0.6) {
@@ -97,23 +109,21 @@ export function seedSessions(): void {
     const region = weightedPick(rng, REGIONS, REGION_WEIGHTS);
 
     const questionCount = Math.floor(rng() * 21) + 8;
-    const shuffled = [...activeQuestions].sort(() => rng() - 0.5);
+    const shuffled = fisherYatesShuffle(rng, activeQuestions);
     const chosen = shuffled.slice(0, Math.min(questionCount, activeQuestions.length));
 
-    const baseTimestamp = Date.now() - 30 * 24 * 60 * 60 * 1000;
-
-    const responses = chosen.map((q) => {
+    const responses = chosen.map((q, qIdx) => {
       const majorityIdx = MAJORITY_INDICES[q.id] ?? 0;
       const answerIdx = pickIndex(rng, makeAnswerWeights(q.options, majorityIdx));
       const predictionIdx = pickIndex(rng, makePredictionWeights(q.options, majorityIdx));
-      const offsetMs = Math.floor(rng() * 30 * 24 * 60 * 60 * 1000);
+      const offsetMs = Math.floor(rng() * THIRTY_DAYS_MS);
       return {
-        id: randomUUID(),
+        id: `seed_${String(sessionIdx).padStart(3, "0")}_${q.id}_${qIdx}`,
         sessionId,
         questionId: q.id,
         answer: q.options[answerIdx],
         predictedMajority: q.options[predictionIdx],
-        createdAt: new Date(baseTimestamp + offsetMs).toISOString(),
+        createdAt: new Date(SEED_EPOCH + offsetMs).toISOString(),
       };
     });
 
