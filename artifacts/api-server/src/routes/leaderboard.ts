@@ -89,17 +89,16 @@ router.get("/leaderboard", async (req, res): Promise<void> => {
 
   const totalParticipants = ranked.length;
 
-  const top50 = ranked.slice(0, 50).map(({ sessionId: _sid, ...rest }) => rest);
+  const top50Slice = ranked.slice(0, 50);
+  const top50SessionIds = new Set(top50Slice.map((e) => e.sessionId));
+  const top50 = top50Slice.map(({ sessionId: _sid, ...rest }) => rest);
 
-  let currentUserRank: number | null = null;
   const callerEntry = sessionId ? ranked.find((e) => e.sessionId === sessionId) : undefined;
-  if (callerEntry) {
-    currentUserRank = callerEntry.rank;
-  }
+  const currentUserRank: number | null = callerEntry ? callerEntry.rank : null;
 
   const entries = [...top50];
 
-  if (callerEntry && callerEntry.rank > 50) {
+  if (callerEntry && !top50SessionIds.has(callerEntry.sessionId)) {
     const { sessionId: _sid, ...rest } = callerEntry;
     entries.push(rest);
   }

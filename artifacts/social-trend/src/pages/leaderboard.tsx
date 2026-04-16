@@ -125,11 +125,11 @@ export default function Leaderboard() {
     );
   }
 
-  const currentUserInTop = data?.entries.some((e) => e.isCurrentUser && e.rank <= 50);
   const hasAnswers = data && data.currentUserRank !== null;
 
-  const top50Entries = data?.entries.filter((e) => e.rank <= 50) ?? [];
-  const overflowEntry = data?.entries.find((e) => e.isCurrentUser && e.rank > 50);
+  const top50Entries = data?.entries.slice(0, 50) ?? [];
+  const overflowEntry = data?.entries.slice(50).find((e) => e.isCurrentUser);
+  const currentUserInTop = top50Entries.some((e) => e.isCurrentUser);
 
   return (
     <motion.div
