@@ -35,9 +35,6 @@ export default function QuestionPage() {
 
   if (!question) return null;
 
-  // If already answered, they can still view it or maybe we should just let them re-answer or go to results?
-  // The brief implies normal flow. We'll let them click through.
-
   const handleContinue = () => {
     if (selectedOption && id) {
       setFlowAnswer(id, selectedOption);

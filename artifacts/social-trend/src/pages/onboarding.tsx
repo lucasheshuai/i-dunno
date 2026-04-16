@@ -7,10 +7,10 @@ import { getSessionId, setOnboarded } from "@/lib/store";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-type Step = "intro" | "age" | "gender" | "relationship";
+type Step = "intro" | "age" | "gender" | "region" | "relationship";
 
 export default function Onboarding() {
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
   const returnTo = new URLSearchParams(window.location.search).get("returnTo") || "/explore";
   const { toast } = useToast();
   
@@ -19,6 +19,7 @@ export default function Onboarding() {
   const [demographics, setDemographics] = useState({
     ageRange: "",
     gender: "",
+    region: "",
     relationshipStatus: ""
   });
 
@@ -29,13 +30,15 @@ export default function Onboarding() {
     setLocation(returnTo);
   };
 
-  const handleFinish = () => {
+  const handleFinish = (finalRelationship: string) => {
+    const data = { ...demographics, relationshipStatus: finalRelationship };
     updateMutation.mutate({
       data: {
         sessionId: getSessionId(),
-        ageRange: demographics.ageRange || null,
-        gender: demographics.gender || null,
-        relationshipStatus: demographics.relationshipStatus || null,
+        ageRange: data.ageRange || null,
+        gender: data.gender || null,
+        region: data.region || null,
+        relationshipStatus: data.relationshipStatus || null,
       }
     }, {
       onSuccess: () => {
@@ -47,7 +50,6 @@ export default function Onboarding() {
           title: "Error saving profile",
           variant: "destructive"
         });
-        // Still let them through
         setOnboarded();
         setLocation(returnTo);
       }
@@ -128,6 +130,33 @@ export default function Onboarding() {
                   className="h-14 text-md rounded-xl"
                   onClick={() => {
                     setDemographics(p => ({ ...p, gender: opt }));
+                    setTimeout(() => setStep("region"), 300);
+                  }}
+                >
+                  {opt}
+                </Button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {step === "region" && (
+          <motion.div 
+            key="region"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="flex flex-col gap-8 w-full"
+          >
+            <h2 className="text-3xl font-serif font-medium">Where are you from?</h2>
+            <div className="grid grid-cols-1 gap-3">
+              {["North America", "Europe", "Asia", "Latin America", "Middle East & Africa", "Oceania"].map(opt => (
+                <Button 
+                  key={opt} 
+                  variant={demographics.region === opt ? "default" : "outline"}
+                  className="h-14 text-md rounded-xl"
+                  onClick={() => {
+                    setDemographics(p => ({ ...p, region: opt }));
                     setTimeout(() => setStep("relationship"), 300);
                   }}
                 >
@@ -166,7 +195,7 @@ export default function Onboarding() {
               size="lg" 
               className="mt-8 h-14 rounded-xl" 
               disabled={!demographics.relationshipStatus || updateMutation.isPending}
-              onClick={handleFinish}
+              onClick={() => handleFinish(demographics.relationshipStatus)}
             >
               {updateMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "See Results"}
             </Button>

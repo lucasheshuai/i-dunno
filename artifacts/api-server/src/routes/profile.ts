@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { GetProfileQueryParams, UpdateDemographicsBody } from "@workspace/api-zod";
 import { sessions } from "../lib/session-store";
+import { mockResults, questions } from "../lib/seed-data";
 
 const router: IRouter = Router();
 
@@ -9,6 +10,33 @@ function computeBadge(answeredCount: number, accuracy: number): string {
   if (accuracy <= 0.35 && answeredCount >= 5) return "Contrarian";
   if (answeredCount >= 10) return "Trend Watcher";
   return "Social Realist";
+}
+
+function computeStats(responses: Array<{ questionId: string; predictedMajority: string }>) {
+  const answeredCount = responses.length;
+
+  let correctPredictions = 0;
+  const categoryCounts: Record<string, number> = {};
+
+  for (const r of responses) {
+    const result = mockResults.get(r.questionId);
+    if (result && r.predictedMajority === result.majorityAnswer) {
+      correctPredictions++;
+    }
+    const q = questions.find(q => q.id === r.questionId);
+    if (q) {
+      categoryCounts[q.category] = (categoryCounts[q.category] || 0) + 1;
+    }
+  }
+
+  const predictionAccuracy = answeredCount > 0 ? correctPredictions / answeredCount : 0;
+
+  let favoriteCategory: string | null = null;
+  if (Object.keys(categoryCounts).length > 0) {
+    favoriteCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0][0];
+  }
+
+  return { answeredCount, predictionAccuracy, favoriteCategory };
 }
 
 router.get("/profile", async (req, res): Promise<void> => {
@@ -36,15 +64,7 @@ router.get("/profile", async (req, res): Promise<void> => {
     return;
   }
 
-  const responses = session.responses;
-  const answeredCount = responses.length;
-
-  let correctPredictions = 0;
-  for (const r of responses) {
-    if (r.answer === r.predictedMajority) correctPredictions++;
-  }
-  const predictionAccuracy = answeredCount > 0 ? correctPredictions / answeredCount : 0;
-
+  const { answeredCount, predictionAccuracy, favoriteCategory } = computeStats(session.responses);
   const badge = computeBadge(answeredCount, predictionAccuracy);
 
   res.json({
@@ -55,7 +75,7 @@ router.get("/profile", async (req, res): Promise<void> => {
     relationshipStatus: session.relationshipStatus,
     answeredCount,
     predictionAccuracy,
-    favoriteCategory: null,
+    favoriteCategory,
     badge,
   });
 });
@@ -86,13 +106,7 @@ router.post("/profile", async (req, res): Promise<void> => {
   if (region !== undefined) session.region = region ?? null;
   if (relationshipStatus !== undefined) session.relationshipStatus = relationshipStatus ?? null;
 
-  const responses = session.responses;
-  const answeredCount = responses.length;
-  let correctPredictions = 0;
-  for (const r of responses) {
-    if (r.answer === r.predictedMajority) correctPredictions++;
-  }
-  const predictionAccuracy = answeredCount > 0 ? correctPredictions / answeredCount : 0;
+  const { answeredCount, predictionAccuracy, favoriteCategory } = computeStats(session.responses);
   const badge = computeBadge(answeredCount, predictionAccuracy);
 
   res.json({
@@ -103,7 +117,7 @@ router.post("/profile", async (req, res): Promise<void> => {
     relationshipStatus: session.relationshipStatus,
     answeredCount,
     predictionAccuracy,
-    favoriteCategory: null,
+    favoriteCategory,
     badge,
   });
 });

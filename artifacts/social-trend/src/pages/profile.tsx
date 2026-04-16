@@ -64,7 +64,7 @@ export default function Profile() {
         <Card className="border-none shadow-sm bg-secondary/30">
           <CardContent className="p-6 flex flex-col items-center text-center gap-2">
             <Target className="w-6 h-6 text-primary mb-1" />
-            <span className="text-3xl font-serif font-bold text-primary">{Math.round(profile.predictionAccuracy)}%</span>
+            <span className="text-3xl font-serif font-bold text-primary">{Math.round(profile.predictionAccuracy * 100)}%</span>
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Accuracy</span>
           </CardContent>
         </Card>
@@ -80,7 +80,7 @@ export default function Profile() {
 
       <div className="flex flex-col gap-6 mt-8">
         <h2 className="text-xl font-serif font-bold border-b pb-4">Demographics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div className="flex flex-col gap-1">
             <span className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Age</span>
             <span className="text-lg font-medium">{profile.ageRange || "Not provided"}</span>
@@ -88,6 +88,10 @@ export default function Profile() {
           <div className="flex flex-col gap-1">
             <span className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Gender</span>
             <span className="text-lg font-medium">{profile.gender || "Not provided"}</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Region</span>
+            <span className="text-lg font-medium">{profile.region || "Not provided"}</span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Relationship</span>
