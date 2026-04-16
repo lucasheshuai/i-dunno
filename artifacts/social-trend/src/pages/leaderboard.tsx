@@ -159,11 +159,11 @@ export default function Leaderboard() {
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Target className="w-4 h-4" />
-          <span>Ranked by accuracy · answered</span>
+          <span>· updated live</span>
         </div>
       </div>
 
-      {!hasAnswers && (
+      {!hasAnswers && top50Entries.length === 0 && (
         <div className="flex flex-col items-center gap-4 py-12 text-center">
           <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center">
             <Trophy className="w-7 h-7 text-muted-foreground" />
@@ -176,6 +176,15 @@ export default function Leaderboard() {
           </div>
           <Button asChild>
             <Link href="/">Answer Questions</Link>
+          </Button>
+        </div>
+      )}
+
+      {!hasAnswers && top50Entries.length > 0 && (
+        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-secondary/30 border border-border/30">
+          <p className="text-sm text-muted-foreground">Answer questions to appear on the leaderboard</p>
+          <Button size="sm" asChild>
+            <Link href="/">Start</Link>
           </Button>
         </div>
       )}
