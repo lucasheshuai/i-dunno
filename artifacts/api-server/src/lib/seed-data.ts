@@ -827,13 +827,13 @@ const seed: {
   {
     id: "q27",
     total: 5340,
-    percentages: [56, 6, 24, 14],
+    percentages: [54, 7, 25, 14],
     majority: 0,
     segments: [
-      { groupName: "Men", percentages: [50, 8, 26, 16] },
-      { groupName: "Women", percentages: [62, 4, 22, 12] },
-      { groupName: "Single", percentages: [56, 6, 24, 14] },
-      { groupName: "In a relationship", percentages: [56, 6, 24, 14] },
+      { groupName: "Men", percentages: [49, 9, 27, 15] },
+      { groupName: "Women", percentages: [55, 5, 26, 14] },
+      { groupName: "Single", percentages: [54, 7, 25, 14] },
+      { groupName: "In a relationship", percentages: [54, 7, 25, 14] },
     ],
   },
   {
