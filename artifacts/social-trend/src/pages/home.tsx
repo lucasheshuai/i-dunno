@@ -1,7 +1,7 @@
 import { useLocation, Link } from "wouter";
-import { ArrowRight, BarChart3, Users, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useGetTodayQuestion, getGetTodayQuestionQueryKey, useGetStats, getGetStatsQueryKey } from "@workspace/api-client-react";
+import { useGetTodayQuestion, getGetTodayQuestionQueryKey, useGetStats, getGetStatsQueryKey, useListQuestions, getListQuestionsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isQuestionAnswered } from "@/lib/store";
@@ -21,9 +21,18 @@ export default function Home() {
     }
   });
 
+  const { data: allQuestions, isLoading: isTrendingLoading } = useListQuestions({}, {
+    query: {
+      queryKey: getListQuestionsQueryKey({})
+    }
+  });
+
+  const trendingQuestions = allQuestions
+    ?.filter(q => q.id !== todayQuestion?.id)
+    .slice(0, 3) ?? [];
+
   return (
     <div className="flex flex-col gap-16 pb-12 w-full max-w-3xl mx-auto px-4 pt-12 md:pt-24">
-      {/* Hero Section */}
       <section className="flex flex-col items-center text-center gap-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
           <Sparkles className="w-4 h-4" />
@@ -38,7 +47,6 @@ export default function Home() {
         </p>
       </section>
 
-      {/* Featured Question */}
       <section className="flex flex-col gap-4">
         <div className="flex items-center justify-between px-2">
           <h2 className="text-lg font-semibold tracking-tight">Today's Question</h2>
@@ -83,7 +91,46 @@ export default function Home() {
         )}
       </section>
 
-      {/* How it works */}
+      <section className="flex flex-col gap-4">
+        <div className="flex items-center justify-between px-2">
+          <h2 className="text-lg font-semibold tracking-tight">Trending Questions</h2>
+          <Link href="/explore" className="text-sm text-primary font-medium hover:underline">
+            View all
+          </Link>
+        </div>
+
+        {isTrendingLoading ? (
+          <div className="flex flex-col gap-3">
+            <Skeleton className="w-full h-20 rounded-xl" />
+            <Skeleton className="w-full h-20 rounded-xl" />
+            <Skeleton className="w-full h-20 rounded-xl" />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {trendingQuestions.map((q) => (
+              <Card
+                key={q.id}
+                className="group cursor-pointer hover:border-primary/40 transition-colors"
+                onClick={() => setLocation(`/question/${q.id}`)}
+              >
+                <CardContent className="p-4 md:p-5 flex items-center justify-between gap-4">
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <div className="inline-flex px-2 py-0.5 rounded bg-secondary text-secondary-foreground text-xs font-medium uppercase tracking-wider w-max">
+                      {q.category}
+                    </div>
+                    <p className="font-medium text-sm md:text-base leading-snug line-clamp-2">
+                      {q.prompt}
+                    </p>
+                    <span className="text-xs text-muted-foreground">{q.responseCount.toLocaleString()} responses</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 shrink-0 text-muted-foreground group-hover:text-primary transition-colors" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t">
         <div className="flex flex-col gap-3">
           <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground font-serif text-lg font-bold">1</div>
@@ -108,7 +155,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats */}
       {!isStatsLoading && stats && (
         <section className="flex flex-wrap justify-center gap-8 py-8 px-4 bg-secondary/50 rounded-2xl">
           <div className="flex flex-col items-center gap-1">
@@ -121,7 +167,6 @@ export default function Home() {
           </div>
         </section>
       )}
-
     </div>
   );
 }
