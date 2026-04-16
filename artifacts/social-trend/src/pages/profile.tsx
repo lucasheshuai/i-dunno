@@ -1,5 +1,5 @@
 import { useGetProfile, getGetProfileQueryKey } from "@workspace/api-client-react";
-import { getSessionId } from "@/lib/store";
+import { getSessionId, getDemographics, hasSharedDemographics } from "@/lib/store";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -7,6 +7,8 @@ import { Award, Target, Hash, Compass } from "lucide-react";
 
 export default function Profile() {
   const sessionId = getSessionId();
+  const localDemographics = getDemographics();
+  const demographicsShared = hasSharedDemographics();
   
   const { data: profile, isLoading } = useGetProfile({ sessionId }, {
     query: {
@@ -78,27 +80,29 @@ export default function Profile() {
         </Card>
       </div>
 
-      <div className="flex flex-col gap-6 mt-8">
-        <h2 className="text-xl font-serif font-bold border-b pb-4">Demographics</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="flex flex-col gap-1">
-            <span className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Age</span>
-            <span className="text-lg font-medium">{profile.ageRange || "Not provided"}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Gender</span>
-            <span className="text-lg font-medium">{profile.gender || "Not provided"}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Region</span>
-            <span className="text-lg font-medium">{profile.region || "Not provided"}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Relationship</span>
-            <span className="text-lg font-medium">{profile.relationshipStatus || "Not provided"}</span>
+      {demographicsShared && (
+        <div className="flex flex-col gap-6 mt-8">
+          <h2 className="text-xl font-serif font-bold border-b pb-4">Demographics</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Age</span>
+              <span className="text-lg font-medium">{localDemographics.ageRange || "Not provided"}</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Gender</span>
+              <span className="text-lg font-medium">{localDemographics.gender || "Not provided"}</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Region</span>
+              <span className="text-lg font-medium">{localDemographics.region || "Not provided"}</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Relationship</span>
+              <span className="text-lg font-medium">{localDemographics.relationshipStatus || "Not provided"}</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </motion.div>
   );
 }
