@@ -21,6 +21,16 @@ router.post("/responses", async (req, res): Promise<void> => {
     return;
   }
 
+  if (!question.options.includes(answer)) {
+    res.status(400).json({ error: "Invalid answer: not a valid option for this question" });
+    return;
+  }
+
+  if (!question.options.includes(predictedMajority)) {
+    res.status(400).json({ error: "Invalid predictedMajority: not a valid option for this question" });
+    return;
+  }
+
   if (!sessions.has(sessionId)) {
     sessions.set(sessionId, {
       sessionId,
