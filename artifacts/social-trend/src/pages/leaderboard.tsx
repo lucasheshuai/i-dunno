@@ -204,6 +204,14 @@ export default function Leaderboard() {
 
   useEffect(() => {
     if (!showDialog) {
+      const savedNickname = getNickname();
+      if (savedNickname) {
+        fetch("/api/profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId, nickname: savedNickname }),
+        }).catch(() => {});
+      }
       fetchLeaderboard();
     }
   }, [showDialog]);
