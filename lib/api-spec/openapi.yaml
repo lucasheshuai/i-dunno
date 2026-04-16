@@ -3,20 +3,26 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Social Trend App API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: questions
+    description: Question operations
+  - name: responses
+    description: User response operations
+  - name: profile
+    description: User profile operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +30,160 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /questions:
+    get:
+      operationId: listQuestions
+      tags: [questions]
+      summary: List all active questions
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Question"
+
+  /questions/today:
+    get:
+      operationId: getTodayQuestion
+      tags: [questions]
+      summary: Get today's featured question
+      responses:
+        "200":
+          description: Today's question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+
+  /questions/{id}:
+    get:
+      operationId: getQuestion
+      tags: [questions]
+      summary: Get a single question by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Question details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+        "404":
+          description: Question not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /questions/{id}/results:
+    get:
+      operationId: getQuestionResults
+      tags: [questions]
+      summary: Get aggregated results for a question
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Aggregated results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AggregatedResult"
+        "404":
+          description: Question not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /responses:
+    post:
+      operationId: submitResponse
+      tags: [responses]
+      summary: Submit a user answer and prediction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitResponseBody"
+      responses:
+        "201":
+          description: Response submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [profile]
+      summary: Get user profile stats
+      parameters:
+        - name: sessionId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Profile stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+    post:
+      operationId: updateDemographics
+      tags: [profile]
+      summary: Save user demographics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDemographicsBody"
+      responses:
+        "200":
+          description: Demographics saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [questions]
+      summary: Get overall app stats (total responses, questions answered, etc.)
+      responses:
+        "200":
+          description: App stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +194,201 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    Question:
+      type: object
+      properties:
+        id:
+          type: string
+        category:
+          type: string
+          enum: [Dating, Marriage, Gender, Money, Values, Career]
+        type:
+          type: string
+          enum: [single_choice, slider]
+        prompt:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [active, draft]
+        responseCount:
+          type: integer
+      required:
+        - id
+        - category
+        - type
+        - prompt
+        - options
+        - status
+        - responseCount
+
+    DistributionItem:
+      type: object
+      properties:
+        option:
+          type: string
+        percentage:
+          type: number
+        count:
+          type: integer
+      required:
+        - option
+        - percentage
+        - count
+
+    SegmentResult:
+      type: object
+      properties:
+        groupName:
+          type: string
+        distribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/DistributionItem"
+      required:
+        - groupName
+        - distribution
+
+    AggregatedResult:
+      type: object
+      properties:
+        questionId:
+          type: string
+        totalResponses:
+          type: integer
+        majorityAnswer:
+          type: string
+        distribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/DistributionItem"
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/SegmentResult"
+      required:
+        - questionId
+        - totalResponses
+        - majorityAnswer
+        - distribution
+        - segments
+
+    SubmitResponseBody:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        questionId:
+          type: string
+        answer:
+          type: string
+        predictedMajority:
+          type: string
+      required:
+        - sessionId
+        - questionId
+        - answer
+        - predictedMajority
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        sessionId:
+          type: string
+        questionId:
+          type: string
+        answer:
+          type: string
+        predictedMajority:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - sessionId
+        - questionId
+        - answer
+        - predictedMajority
+        - createdAt
+
+    UserProfile:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        ageRange:
+          type: string
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+        region:
+          type: string
+          nullable: true
+        relationshipStatus:
+          type: string
+          nullable: true
+        answeredCount:
+          type: integer
+        predictionAccuracy:
+          type: number
+        favoriteCategory:
+          type: string
+          nullable: true
+        badge:
+          type: string
+          nullable: true
+      required:
+        - sessionId
+        - answeredCount
+        - predictionAccuracy
+
+    UpdateDemographicsBody:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        ageRange:
+          type: string
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+        region:
+          type: string
+          nullable: true
+        relationshipStatus:
+          type: string
+          nullable: true
+      required:
+        - sessionId
+
+    AppStats:
+      type: object
+      properties:
+        totalResponses:
+          type: integer
+        totalQuestions:
+          type: integer
+        activeUsers:
+          type: integer
+        topCategory:
+          type: string
+      required:
+        - totalResponses
+        - totalQuestions
+        - activeUsers
+        - topCategory

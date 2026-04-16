@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Social Trend"
+version = "1.0.0"
+id = "artifacts/social-trend"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22727
+
+[services.development]
+run = "pnpm --filter @workspace/social-trend run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/social-trend", "run", "build" ]
+publicDir = "artifacts/social-trend/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22727"
+BASE_PATH = "/"
