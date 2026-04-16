@@ -22,7 +22,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}
             <Link href="/" className="font-serif text-xl font-medium tracking-tight hover:text-primary transition-colors flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              Social Trend
+              I Dunno
             </Link>
           </div>
           
