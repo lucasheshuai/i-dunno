@@ -9,6 +9,7 @@ export interface SessionResponse {
 
 export interface Session {
   sessionId: string;
+  nickname: string | null;
   ageRange: string | null;
   gender: string | null;
   region: string | null;

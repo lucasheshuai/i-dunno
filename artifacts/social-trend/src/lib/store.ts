@@ -124,3 +124,11 @@ export const getFlowState = (questionId: string): { answer?: string; prediction?
 export const clearFlowState = (questionId: string) => {
   delete flowState[questionId];
 };
+
+export const getNickname = (): string | null => {
+  return localStorage.getItem('st_nickname');
+};
+
+export const setNickname = (name: string): void => {
+  localStorage.setItem('st_nickname', name);
+};

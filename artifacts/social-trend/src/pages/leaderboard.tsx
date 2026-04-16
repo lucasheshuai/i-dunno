@@ -1,10 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { Trophy, Medal, Users, Target } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getSessionId } from "@/lib/store";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { getSessionId, getNickname, setNickname } from "@/lib/store";
 
 interface LeaderboardEntry {
   rank: number;
@@ -20,6 +27,8 @@ interface LeaderboardData {
   currentUserRank: number | null;
   totalParticipants: number;
 }
+
+const NICKNAME_RE = /^[a-zA-Z0-9 _-]+$/;
 
 function RankDisplay({ rank }: { rank: number }) {
   if (rank === 1) {
@@ -94,12 +103,94 @@ function EntryRow({ entry, index }: { entry: LeaderboardEntry; index: number }) 
   );
 }
 
+function NicknameDialog({
+  onConfirm,
+  onSkip,
+}: {
+  onConfirm: (name: string) => void;
+  onSkip: () => void;
+}) {
+  const [value, setValue] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setTimeout(() => inputRef.current?.focus(), 100);
+  }, []);
+
+  function validate(v: string): string | null {
+    const trimmed = v.trim();
+    if (trimmed.length < 2) return "Must be at least 2 characters.";
+    if (trimmed.length > 20) return "Must be 20 characters or fewer.";
+    if (!NICKNAME_RE.test(trimmed)) return "Only letters, numbers, spaces, _ and - allowed.";
+    return null;
+  }
+
+  function handleSubmit() {
+    const err = validate(value);
+    if (err) {
+      setError(err);
+      return;
+    }
+    onConfirm(value.trim());
+  }
+
+  return (
+    <Dialog open>
+      <DialogContent
+        className="sm:max-w-sm"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
+        <DialogHeader>
+          <DialogTitle className="text-xl font-serif">Choose your nickname</DialogTitle>
+          <DialogDescription>
+            This shows on the leaderboard. No sign-in needed — it stays on this device.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-3 mt-1">
+          <input
+            ref={inputRef}
+            type="text"
+            maxLength={20}
+            placeholder="e.g. TrendHunter"
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value);
+              if (error) setError(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSubmit();
+            }}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+          {error && <p className="text-xs text-destructive">{error}</p>}
+
+          <Button onClick={handleSubmit} className="w-full">
+            Set Nickname
+          </Button>
+
+          <button
+            onClick={onSkip}
+            className="text-xs text-muted-foreground underline underline-offset-2 text-center hover:text-foreground transition-colors"
+          >
+            Skip for now
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Leaderboard() {
   const sessionId = getSessionId();
   const [data, setData] = useState<LeaderboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [showDialog, setShowDialog] = useState<boolean>(() => getNickname() === null);
 
-  useEffect(() => {
+  function fetchLeaderboard() {
+    setLoading(true);
     const url = sessionId
       ? `/api/leaderboard?sessionId=${encodeURIComponent(sessionId)}`
       : "/api/leaderboard";
@@ -109,7 +200,31 @@ export default function Leaderboard() {
       .then((json) => setData(json as LeaderboardData))
       .catch(() => setData({ entries: [], currentUserRank: null, totalParticipants: 0 }))
       .finally(() => setLoading(false));
-  }, [sessionId]);
+  }
+
+  useEffect(() => {
+    if (!showDialog) {
+      fetchLeaderboard();
+    }
+  }, [showDialog]);
+
+  function handleNicknameConfirm(name: string) {
+    setNickname(name);
+    fetch("/api/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, nickname: name }),
+    }).catch(() => {});
+    setShowDialog(false);
+  }
+
+  function handleSkip() {
+    setShowDialog(false);
+  }
+
+  if (showDialog) {
+    return <NicknameDialog onConfirm={handleNicknameConfirm} onSkip={handleSkip} />;
+  }
 
   if (loading) {
     return (

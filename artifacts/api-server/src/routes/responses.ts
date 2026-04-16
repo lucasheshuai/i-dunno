@@ -34,6 +34,7 @@ router.post("/responses", async (req, res): Promise<void> => {
   if (!sessions.has(sessionId)) {
     sessions.set(sessionId, {
       sessionId,
+      nickname: null,
       ageRange: null,
       gender: null,
       region: null,

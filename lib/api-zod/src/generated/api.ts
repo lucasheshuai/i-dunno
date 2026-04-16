@@ -134,6 +134,7 @@ export const GetProfileQueryParams = zod.object({
 
 export const GetProfileResponse = zod.object({
   sessionId: zod.string(),
+  nickname: zod.string().nullish(),
   ageRange: zod.string().nullish(),
   gender: zod.string().nullish(),
   region: zod.string().nullish(),
@@ -149,6 +150,7 @@ export const GetProfileResponse = zod.object({
  */
 export const UpdateDemographicsBody = zod.object({
   sessionId: zod.string(),
+  nickname: zod.string().nullish(),
   ageRange: zod.string().nullish(),
   gender: zod.string().nullish(),
   region: zod.string().nullish(),
@@ -157,6 +159,7 @@ export const UpdateDemographicsBody = zod.object({
 
 export const UpdateDemographicsResponse = zod.object({
   sessionId: zod.string(),
+  nickname: zod.string().nullish(),
   ageRange: zod.string().nullish(),
   gender: zod.string().nullish(),
   region: zod.string().nullish(),

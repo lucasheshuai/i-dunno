@@ -53,7 +53,7 @@ router.get("/leaderboard", async (req, res): Promise<void> => {
     if (answeredCount === 0) continue;
     allEntries.push({
       sessionId: session.sessionId,
-      handle: session.sessionId.slice(0, 6),
+      handle: session.nickname ?? session.sessionId.slice(0, 6),
       answeredCount,
       predictionAccuracy,
       badge: computeBadge(answeredCount, predictionAccuracy),

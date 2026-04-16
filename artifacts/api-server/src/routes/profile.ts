@@ -52,6 +52,7 @@ router.get("/profile", async (req, res): Promise<void> => {
   if (!session) {
     res.json({
       sessionId,
+      nickname: null,
       ageRange: null,
       gender: null,
       region: null,
@@ -69,6 +70,7 @@ router.get("/profile", async (req, res): Promise<void> => {
 
   res.json({
     sessionId,
+    nickname: session.nickname,
     ageRange: session.ageRange,
     gender: session.gender,
     region: session.region,
@@ -87,11 +89,12 @@ router.post("/profile", async (req, res): Promise<void> => {
     return;
   }
 
-  const { sessionId, ageRange, gender, region, relationshipStatus } = parsed.data;
+  const { sessionId, nickname, ageRange, gender, region, relationshipStatus } = parsed.data;
 
   if (!sessions.has(sessionId)) {
     sessions.set(sessionId, {
       sessionId,
+      nickname: null,
       ageRange: null,
       gender: null,
       region: null,
@@ -101,6 +104,10 @@ router.post("/profile", async (req, res): Promise<void> => {
   }
 
   const session = sessions.get(sessionId)!;
+  if (nickname !== undefined && nickname !== null) {
+    const trimmed = nickname.trim().slice(0, 20);
+    if (trimmed.length >= 2) session.nickname = trimmed;
+  }
   if (ageRange !== undefined) session.ageRange = ageRange ?? null;
   if (gender !== undefined) session.gender = gender ?? null;
   if (region !== undefined) session.region = region ?? null;
@@ -111,6 +118,7 @@ router.post("/profile", async (req, res): Promise<void> => {
 
   res.json({
     sessionId,
+    nickname: session.nickname,
     ageRange: session.ageRange,
     gender: session.gender,
     region: session.region,
