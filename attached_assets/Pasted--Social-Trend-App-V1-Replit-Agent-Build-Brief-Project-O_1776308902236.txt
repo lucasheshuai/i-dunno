@@ -1,0 +1,619 @@
+# Social Trend App V1 — Replit Agent Build Brief
+
+## Project Overview
+
+Build a web-based MVP for a social insights product that turns opinion collection into an engaging interactive experience.
+
+This is **not** a traditional survey app. It should feel more like a mix of:
+
+* opinion game
+* social trend explorer
+* lightweight personality/insight app
+* interactive polling product
+
+The core value proposition is:
+
+> Answer one social question in seconds, compare your view with others, and discover how different groups think.
+
+The app language should be **English**.
+The initial build should be optimized for **desktop web demo**, but designed with a **mobile-first interaction style** (simple screens, card-based UI, minimal friction).
+
+---
+
+## Product Vision
+
+Users are curious about social trends, relationship norms, gender differences, consumption habits, and cultural attitudes, but most discussions rely on anecdotes and biased small samples.
+
+This product should make it fun and effortless for users to:
+
+1. answer socially relevant questions
+2. predict what others think
+3. instantly compare themselves against broader patterns
+4. return for more questions
+
+The product should feel:
+
+* smart
+* modern
+* slightly playful
+* visually clean
+* not academic
+* not corporate
+* not like Google Forms
+
+---
+
+## V1 Goal
+
+The goal of V1 is **not** to build a full data platform.
+The goal is to test whether users find the interaction engaging enough to:
+
+* answer one question
+* answer a second question
+* compare themselves with others
+* feel curious enough to continue
+
+V1 should simulate a real product experience, even if the dataset is initially mocked or seeded.
+
+---
+
+## Core User Flow
+
+### Primary Flow
+
+1. User lands on homepage
+2. User clicks “Start Today’s Question”
+3. User sees one opinion question
+4. User selects an answer
+5. User is asked to predict what the majority chose
+6. User sees results screen:
+
+   * their answer
+   * overall distribution
+   * comparison by selected demographic groups
+   * whether their prediction was accurate
+7. User is encouraged to answer another question
+
+This loop should be extremely smooth and fast.
+
+---
+
+## V1 Scope
+
+### In Scope
+
+* Homepage
+* Question answering flow
+* “Predict the majority” interaction
+* Results page with simple visual breakdowns
+* Question feed / next question CTA
+* Optional onboarding for basic demographics
+* Lightweight profile page
+* Admin-friendly seed data structure
+
+### Out of Scope for V1
+
+* comments
+* social graph
+* follow/friend system
+* real-time chat
+* advanced analytics dashboard
+* AI summarization
+* push notifications
+* payments
+* true representative sampling
+* complicated authentication systems
+
+---
+
+## Target Audience for V1
+
+Early users are likely:
+
+* curious young adults
+* people who enjoy discussing modern relationships, culture, and social behavior
+* users who like interactive apps, quizzes, and polling products
+* English-speaking demo/test users
+
+---
+
+## Initial Topic Focus
+
+V1 should start with **social and relationship questions** because they are naturally engaging.
+
+Suggested topic categories:
+
+* dating
+* marriage
+* gender expectations
+* career vs relationships
+* lifestyle and spending attitudes
+* modern values
+
+Important: keep the tone thoughtful, provocative, and discussion-worthy, but not hateful or inflammatory.
+
+---
+
+## Product Structure
+
+## 1. Homepage
+
+### Purpose
+
+Introduce the product clearly and drive users into the first question.
+
+### Main content
+
+* headline
+* short value proposition
+* primary CTA
+* optional preview of trending questions
+* optional preview of insight cards
+
+### Suggested copy direction
+
+Headline example:
+**See how people really think.**
+
+Subheadline example:
+**Answer one question, predict the crowd, and compare your perspective with different groups in seconds.**
+
+Primary CTA:
+
+* Start Today’s Question
+
+Secondary CTA:
+
+* Explore Trending Questions
+
+### Homepage sections
+
+1. Hero section
+2. How it works (3 simple steps)
+3. Featured / trending questions
+4. Why it’s interesting
+5. CTA to begin
+
+---
+
+## 2. Onboarding (Lightweight)
+
+### Purpose
+
+Collect minimal demographic data so results can be segmented.
+
+### Requirements
+
+Do **not** make this feel like a survey wall.
+Only ask a few questions.
+Allow skipping where possible.
+
+### Suggested onboarding fields
+
+* Age range
+* Gender
+* City tier or region
+* Relationship status
+
+Possible design:
+
+* one card at a time
+* progress indicator
+* quick tap selections
+
+This can happen either:
+
+* before first question, or
+* after first answer but before viewing full segmented results
+
+Recommended approach for V1:
+Let the user answer the first question first, then ask for demographics before unlocking more detailed breakdowns.
+
+---
+
+## 3. Question Page
+
+### Purpose
+
+Present a single social question in a clean, engaging way.
+
+### Requirements
+
+* one question per screen
+* large card layout
+* highly tappable answer options
+* minimal distractions
+
+### Question types for V1
+
+Support these two types only:
+
+#### Type A: Single-choice
+
+Example:
+**In the marriages you have seen recently, which pattern feels more common?**
+
+* The man has stronger overall conditions
+* The woman has stronger overall conditions
+* They are roughly matched
+
+#### Type B: Slider scale
+
+Example:
+**Modern marriage feels more like love or practical matching?**
+Slider from:
+
+* Mostly practical
+* Balanced
+* Mostly love-driven
+
+For V1, it is acceptable to implement only **single-choice** first and leave slider support as optional if time permits.
+
+### On question page include
+
+* category label
+* question text
+* answer options
+* subtle progress indicator
+* continue button
+
+---
+
+## 4. Prediction Page
+
+### Purpose
+
+Turn passive answering into a game.
+
+### Prompt
+
+After answering, ask:
+**What do you think most people chose?**
+
+This creates a second layer of insight:
+
+* personal opinion
+* perception of public opinion
+
+### UI
+
+Use the same answer options again.
+The user selects what they think the majority chose.
+
+---
+
+## 5. Results Page
+
+### Purpose
+
+Deliver the “reward moment.”
+This is the most important screen in the app.
+
+### Must show
+
+* user’s answer
+* predicted majority answer
+* actual majority answer
+* overall distribution chart
+* segmented comparison blocks
+* CTA to answer another question
+
+### Suggested result modules
+
+#### A. Your Take
+
+* Your answer: X
+* You predicted most people would choose: Y
+* Actual majority: Z
+* Prediction accuracy: Correct / Incorrect
+
+#### B. Overall Distribution
+
+Use a simple bar chart or segmented horizontal bars.
+Show percentages for all answer options.
+
+#### C. Group Differences
+
+Show 2–4 simple comparison cards such as:
+
+* Men vs Women
+* Single vs Married
+* Age 18–24 vs 25–34
+
+Example format:
+**Women** were more likely to choose “roughly matched.”
+**Men** were more likely to choose “the man has stronger conditions.”
+
+#### D. Continue CTA
+
+* Answer Next Question
+* Explore Trending Questions
+
+### Important
+
+This page should feel delightful and insight-rich even if the data is mocked.
+
+---
+
+## 6. Trending / Explore Page
+
+### Purpose
+
+Give users a sense that there is a living bank of interesting social questions.
+
+### Features
+
+* list of available questions
+* category tags
+* short preview text
+* popularity / response count
+* click into question flow
+
+### Optional filters
+
+* Dating
+* Marriage
+* Gender
+* Money
+* Values
+
+---
+
+## 7. Profile Page
+
+### Purpose
+
+Give the user a lightweight sense of identity and progress.
+
+### V1 profile should include
+
+* number of questions answered
+* prediction accuracy percentage
+* favorite or most-answered category
+* simple badge/persona label
+
+### Example badge ideas
+
+* Social Realist
+* Trend Watcher
+* Contrarian
+* Crowd Reader
+
+These can be rule-based in V1.
+
+---
+
+## Design Direction
+
+### Overall visual style
+
+* clean
+* modern
+* card-based
+* soft shadows
+* rounded corners
+* strong spacing
+* minimal clutter
+* elegant typography
+* not too colorful
+* no cheesy gamification
+
+### UX principles
+
+* every page should focus on one main action
+* no long forms
+* no dense text blocks
+* instant feedback after each interaction
+* make the result page feel rewarding
+
+### Suggested frontend stack
+
+* React
+* TypeScript
+* Tailwind CSS
+* component-based architecture
+
+If helpful, use:
+
+* shadcn/ui for components
+* recharts for charts
+* Framer Motion for subtle animation
+
+---
+
+## Data Model Suggestions
+
+Use a simple mock database or local JSON for V1.
+
+### Question
+
+```ts
+{
+  id: string,
+  category: string,
+  type: 'single_choice' | 'slider',
+  prompt: string,
+  options: string[],
+  status: 'active' | 'draft'
+}
+```
+
+### User
+
+```ts
+{
+  id: string,
+  ageRange?: string,
+  gender?: string,
+  region?: string,
+  relationshipStatus?: string,
+  answeredQuestionIds: string[]
+}
+```
+
+### Response
+
+```ts
+{
+  id: string,
+  userId: string,
+  questionId: string,
+  answer: string,
+  predictedMajority: string,
+  createdAt: string
+}
+```
+
+### AggregatedResult
+
+This can be mocked or computed.
+
+```ts
+{
+  questionId: string,
+  totalResponses: number,
+  distribution: {
+    option: string,
+    percentage: number
+  }[],
+  segments: {
+    groupName: string,
+    distribution: {
+      option: string,
+      percentage: number
+    }[]
+  }[]
+}
+```
+
+---
+
+## Seed Content Requirements
+
+Create 12–20 seed questions.
+Start with single-choice questions.
+Keep them concise and engaging.
+
+### Sample seed questions
+
+1. In modern dating, who is usually expected to make the relationship more emotionally stable?
+2. When people talk about “marrying up,” which side do you think society still expects more?
+3. In the marriages you’ve seen recently, what feels most common?
+4. Which matters more in long-term partner selection today?
+5. Are young adults becoming more practical or more romantic about marriage?
+6. Who faces more pressure to be financially established before marriage?
+7. Are people more willing today to date someone with lower income than before?
+8. Which creates more relationship tension today: money or time?
+9. In your view, who is more judged for “settling” in relationships?
+10. Does modern love feel more equal, or just differently unequal?
+
+Make sure wording is engaging but not hostile.
+
+---
+
+## Technical Build Priorities
+
+### Priority 1
+
+Build the full happy-path experience with mocked data:
+
+* homepage
+* question page
+* prediction page
+* result page
+* explore page
+
+### Priority 2
+
+Add lightweight onboarding and profile page.
+
+### Priority 3
+
+Add persistence using local storage or a simple backend.
+
+### Priority 4
+
+Polish UI and animation.
+
+---
+
+## Functional Requirements
+
+* user can start from homepage
+* user can answer a question
+* user can predict majority answer
+* user can view results
+* user can continue to another question
+* user can browse available questions
+* user progress should persist locally at minimum
+* seeded/mock insights should render cleanly
+
+---
+
+## Non-Functional Requirements
+
+* responsive layout
+* fast load time
+* simple architecture
+* clean reusable components
+* easy to expand later
+
+---
+
+## Future Features (Do Not Build Yet)
+
+These should influence architecture, but not be implemented in V1.
+
+* comments / reasoning wall
+* AI-generated insight summaries
+* streaks and retention loops
+* admin content management
+* real user aggregation backend
+* cross-question analytics
+* shareable result cards
+* daily refresh cycle
+* notification system
+* B2B dashboard
+
+---
+
+## Tone and Content Safety
+
+Questions should be:
+
+* thoughtful
+* culturally relevant
+* discussion-worthy
+* not extremist
+* not hateful
+* not targeted harassment
+
+Avoid wording that encourages hostility toward any gender or social group.
+Keep the app intellectually sharp, but socially safe.
+
+---
+
+## Deliverable Expectations for Replit Agent
+
+Please build a polished V1 web app prototype with:
+
+1. a modern landing page
+2. a working question-answer-predict-results loop
+3. mocked data visualizations
+4. an explore page with seed questions
+5. a lightweight profile page
+6. good visual polish and intuitive UX
+
+Use realistic mock data where necessary.
+The end result should feel demo-ready, visually convincing, and easy to expand into a real product.
+
+---
+
+## Extra Implementation Notes
+
+* Favor simplicity over complexity.
+* Make the result page feel especially strong.
+* This should feel like a product people would actually want to try, not a school project or dashboard.
+* The app should be easy to demo to friends, collaborators, or potential investors.
+
+If time permits, add subtle animation and beautiful micro-interactions to make the experience feel more alive.
