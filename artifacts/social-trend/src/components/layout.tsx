@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, User, Library, Sparkles } from "lucide-react";
+import { ArrowLeft, User, Library, Sparkles, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -30,6 +30,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Link href="/explore" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
               <Library className="w-4 h-4 hidden md:block" />
               Explore
+            </Link>
+            <Link href="/leaderboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
+              <Trophy className="w-4 h-4 hidden md:block" />
+              Leaderboard
             </Link>
             <Link href="/profile" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
               <User className="w-4 h-4 hidden md:block" />

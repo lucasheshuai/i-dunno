@@ -12,6 +12,7 @@ import ResultsPage from "@/pages/results";
 import Explore from "@/pages/explore";
 import Onboarding from "@/pages/onboarding";
 import Profile from "@/pages/profile";
+import Leaderboard from "@/pages/leaderboard";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/explore" component={Explore} />
         <Route path="/profile" component={Profile} />
+        <Route path="/leaderboard" component={Leaderboard} />
         <Route path="/onboarding" component={Onboarding} />
         <Route path="/question/:id" component={QuestionPage} />
         <Route path="/predict/:id" component={PredictPage} />

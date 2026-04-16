@@ -176,3 +176,25 @@ export const GetStatsResponse = zod.object({
   activeUsers: zod.number(),
   topCategory: zod.string(),
 });
+
+/**
+ * @summary Get leaderboard
+ */
+export const GetLeaderboardQueryParams = zod.object({
+  sessionId: zod.string().optional(),
+});
+
+export const LeaderboardEntryItem = zod.object({
+  rank: zod.number(),
+  handle: zod.string(),
+  answeredCount: zod.number(),
+  predictionAccuracy: zod.number(),
+  badge: zod.string(),
+  isCurrentUser: zod.boolean(),
+});
+
+export const GetLeaderboardResponse = zod.object({
+  entries: zod.array(LeaderboardEntryItem),
+  currentUserRank: zod.number().nullable(),
+  totalParticipants: zod.number(),
+});
