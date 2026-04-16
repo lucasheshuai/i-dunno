@@ -1,0 +1,346 @@
+50 English Seed Questions
+Dating
+
+1. In modern dating, who is usually expected to make the first move?
+
+Men
+Women
+It feels more equal now
+
+2. In early dating, what matters more first?
+
+Physical attraction
+Emotional connection
+Shared lifestyle and values
+
+3. Who is more likely to be judged for being “too picky” in dating?
+
+Men
+Women
+About equally
+
+4. In dating today, what causes more confusion?
+
+Mixed signals
+Different relationship intentions
+Timing and life stage mismatch
+
+5. Who is more expected to reply quickly in the early stage of dating?
+
+Men
+Women
+Neither side especially
+
+6. What matters more in whether a first date goes well?
+
+Conversation chemistry
+Physical attraction
+Effort and manners
+
+7. In your view, who is under more pressure to seem interesting in dating?
+
+Men
+Women
+About equally
+
+8. In modern dating, which matters more than people openly admit?
+
+Looks
+Income and status
+Emotional maturity
+
+9. Who is more likely to lose interest when things feel too easy too early?
+
+Men
+Women
+It depends more on the person
+Marriage
+
+10. In the marriages you’ve seen recently, what feels most common?
+
+The man has stronger overall conditions
+The woman has stronger overall conditions
+They are roughly matched
+
+11. Who faces more pressure to be financially established before marriage?
+
+Men
+Women
+About equally
+
+12. What matters more in how people judge whether a marriage is a “good match”?
+
+Income and financial stability
+Education and background
+Personality and compatibility
+
+13. In marriage today, what creates more long-term tension?
+
+Money
+Communication
+Division of responsibility
+
+14. Who is more likely to be judged for marrying “down”?
+
+Men
+Women
+About equally
+
+15. In your view, what matters most for a stable marriage today?
+
+Emotional trust
+Financial stability
+Shared values and life goals
+
+16. Are young adults becoming more practical or more romantic about marriage?
+
+More practical
+More romantic
+Not much has changed
+
+17. What is more likely to delay marriage today?
+
+Career uncertainty
+High standards in partner selection
+Financial pressure
+
+18. Who is more likely to be expected to compromise after marriage?
+
+Men
+Women
+About equally
+Gender
+
+19. In relationships today, who is expected to provide more emotional support?
+
+Men
+Women
+About equally
+
+20. Who is judged more harshly for being “too ambitious” in a relationship?
+
+Men
+Women
+Neither side clearly
+
+21. Who is more socially allowed to prioritize career over relationships?
+
+Men
+Women
+About equally
+
+22. In modern relationships, whose insecurity is more socially tolerated?
+
+Men’s
+Women’s
+About equally
+
+23. Who is under more pressure to “have it all” today?
+
+Men
+Women
+About equally
+
+24. In your view, who is more judged for aging in the dating market?
+
+Men
+Women
+About equally
+
+25. Who is more likely to be criticized for caring about a partner’s income?
+
+Men
+Women
+About equally
+
+26. In social discussions today, whose relationship struggles are taken less seriously?
+
+Men’s
+Women’s
+Both are taken seriously enough
+
+27. In modern life, who is more expected to stay emotionally composed no matter what?
+
+Men
+Women
+About equally
+Money
+
+28. In relationships, what causes more disagreement today?
+
+Spending habits
+Income differences
+Different financial goals
+
+29. Who is more likely to use spending as a form of self-reward?
+
+Men
+Women
+About equally
+
+30. In dating, what sends a stronger signal than people admit?
+
+How much someone spends
+How thoughtfully someone spends
+How financially responsible someone seems
+
+31. What matters more for long-term compatibility?
+
+Similar income level
+Similar spending habits
+Similar financial ambition
+
+32. Who is more judged for not earning enough in a relationship?
+
+Men
+Women
+About equally
+
+33. What feels more attractive in a potential long-term partner today?
+
+High income
+Financial discipline
+Growth potential
+
+34. In your view, who is more likely to hide financial stress in a relationship?
+
+Men
+Women
+About equally
+
+35. What is more likely to break trust in a relationship?
+
+Overspending
+Lack of financial transparency
+Unequal effort around money
+Values
+
+36. In choosing a long-term partner today, what matters most?
+
+Emotional compatibility
+Practical stability
+Shared values
+
+37. Which matters more in modern relationships?
+
+Feeling understood
+Feeling secure
+Feeling respected
+
+38. What is harder to compromise on in a serious relationship?
+
+Lifestyle preferences
+Core values
+Long-term goals
+
+39. What matters more in whether a relationship lasts?
+
+Love
+Timing
+Shared life direction
+
+40. Are people today more driven by personal happiness or social expectation in relationships?
+
+Personal happiness
+Social expectation
+A mix of both
+
+41. What creates more regret in relationships?
+
+Choosing the wrong person
+Waiting too long
+Settling too early
+
+42. In your view, what is becoming less acceptable in modern relationships?
+
+Unequal effort
+Emotional unavailability
+Traditional role expectations
+
+43. What matters more when conflict happens in a relationship?
+
+Who is right
+Who is willing to repair
+Whether the issue touches core values
+Career
+
+44. Who is more likely to change life plans for a partner’s career?
+
+Men
+Women
+About equally
+
+45. What creates more strain between career and relationships today?
+
+Long work hours
+Different ambition levels
+Geographic mobility
+
+46. Who faces more pressure to be successful before seriously dating or marrying?
+
+Men
+Women
+About equally
+
+47. In a serious relationship, what is harder to handle?
+
+One partner earning much more
+One partner having much less time
+One partner being much more ambitious
+
+48. What matters more in relationship compatibility today?
+
+Similar career stage
+Similar work-life priorities
+Similar income expectations
+
+49. In dual-career relationships, what is most likely to become a hidden conflict?
+
+Whose career gets prioritized
+Household responsibility
+Emotional availability
+
+50. In your view, who is more likely to feel that career success has made relationships harder rather than easier?
+
+Men
+Women
+About equally
+Recommended usage notes
+
+For V1, I’d suggest you:
+
+keep 3 options max whenever possible
+avoid making every question “men vs women”
+mix in questions about:
+phenomenon
+pressure
+trade-offs
+compatibility
+trend direction
+rotate categories so the feed does not feel repetitive
+
+A strong starter set for launch would be about 15–20 of these, not all 50 at once.
+
+Suggested launch mix for the first 18 questions
+
+A cleaner first batch could be:
+
+Dating: 1, 3, 6, 8
+Marriage: 10, 11, 15, 16
+Gender: 19, 21, 23
+Money: 28, 31, 32
+Values: 36, 39
+Career: 44, 49
+
+That set has good breadth and should produce visible segmentation.
+
+One important rule for future expansion
+
+Whenever you add new questions, check these 4 filters:
+
+Is it understandable in under 5 seconds?
+Does it create interesting group comparison?
+Does it avoid sounding like a sociology paper?
+Will users feel curious about the result?
+
+If a question fails two of those, don’t ship it.
