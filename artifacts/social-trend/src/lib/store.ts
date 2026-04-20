@@ -61,6 +61,10 @@ export const isQuestionAnswered = (id: string) => {
   return !!getAnsweredQuestions()[id];
 };
 
+export const getAnswerCount = (): number => {
+  return Object.keys(getAnsweredQuestions()).length;
+};
+
 // Answer/prediction history persisted in localStorage so it survives page reload
 export interface ResponseRecord {
   questionId: string;
@@ -131,4 +135,112 @@ export const getNickname = (): string | null => {
 
 export const setNickname = (name: string): void => {
   localStorage.setItem('st_nickname', name);
+};
+
+// ─── Profile Signal Accumulation ─────────────────────────────────────────────
+
+const SIGNAL_LABELS: Record<string, string> = {
+  romantic: 'Hopeless Romantic',
+  pragmatic: 'Pragmatic Realist',
+  traditionalist: 'Old-School Traditionalist',
+  progressive: 'Modern Thinker',
+  security_focused: 'Security Seeker',
+  emotionally_aware: 'Emotionally Aware',
+  independent: 'Independent Spirit',
+};
+
+const getStoredProfileSignals = (): Record<string, string[]> => {
+  try {
+    return JSON.parse(localStorage.getItem('st_profile_signals') || '{}');
+  } catch {
+    return {};
+  }
+};
+
+export const recordProfileSignals = (questionId: string, signals: string[]) => {
+  const stored = getStoredProfileSignals();
+  stored[questionId] = signals;
+  localStorage.setItem('st_profile_signals', JSON.stringify(stored));
+};
+
+export const getDominantProfileLabel = (): string | null => {
+  const stored = getStoredProfileSignals();
+  const counts: Record<string, number> = {};
+  Object.values(stored).flat().forEach(s => {
+    counts[s] = (counts[s] || 0) + 1;
+  });
+  if (!Object.keys(counts).length) return null;
+  const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
+  return dominant ? (SIGNAL_LABELS[dominant] ?? null) : null;
+};
+
+// ─── Cluster-Sequential Navigation ───────────────────────────────────────────
+
+export interface QuestionRef {
+  id: string;
+  topicClusterId: string;
+  clusterOrder: number;
+  teaserText: string;
+}
+
+export interface ClusterRef {
+  id: string;
+  title: string;
+  questionIds: string[];
+  outro: string;
+}
+
+export interface NextInSequenceResult {
+  next: QuestionRef | null;
+  clusterComplete: boolean;
+  completedCluster?: ClusterRef;
+}
+
+export const getNextInSequence = (
+  currentId: string,
+  questions: QuestionRef[],
+  clusters: ClusterRef[],
+  answeredIds: Set<string>
+): NextInSequenceResult => {
+  const current = questions.find(q => q.id === currentId);
+  if (!current) return { next: null, clusterComplete: false };
+
+  const currentClusterId = current.topicClusterId;
+  const currentClusterQuestions = questions
+    .filter(q => q.topicClusterId === currentClusterId)
+    .sort((a, b) => a.clusterOrder - b.clusterOrder);
+
+  // The current question just got answered, so include it in the answered set
+  const allAnswered = new Set([...answeredIds, currentId]);
+
+  const allClusterDone = currentClusterQuestions.every(q => allAnswered.has(q.id));
+
+  if (!allClusterDone) {
+    const nextInCluster = currentClusterQuestions.find(q => !allAnswered.has(q.id));
+    if (nextInCluster) return { next: nextInCluster, clusterComplete: false };
+  }
+
+  // Cluster is complete — find the completed cluster meta
+  const completedCluster = clusters.find(c => c.id === currentClusterId);
+
+  // Find first unanswered in the next cluster(s)
+  const sortedClusters = [...clusters].sort((a, b) => a.id.localeCompare(b.id));
+  const currentIdx = sortedClusters.findIndex(c => c.id === currentClusterId);
+
+  for (let i = currentIdx + 1; i < sortedClusters.length; i++) {
+    const nextCluster = sortedClusters[i];
+    const nextClusterQuestions = questions
+      .filter(q => q.topicClusterId === nextCluster.id)
+      .sort((a, b) => a.clusterOrder - b.clusterOrder);
+    const firstUnanswered = nextClusterQuestions.find(q => !allAnswered.has(q.id));
+    if (firstUnanswered) {
+      return {
+        next: firstUnanswered,
+        clusterComplete: true,
+        completedCluster,
+      };
+    }
+  }
+
+  return { next: null, clusterComplete: true, completedCluster };
 };

@@ -1,13 +1,48 @@
 import { useParams, useLocation, Link } from "wouter";
-import { useGetQuestionResults, getGetQuestionResultsQueryKey, useGetQuestion, getGetQuestionQueryKey } from "@workspace/api-client-react";
+import { useEffect, useMemo } from "react";
+import {
+  useGetQuestionResults,
+  getGetQuestionResultsQueryKey,
+  useGetQuestion,
+  getGetQuestionQueryKey,
+  useListQuestions,
+  getListQuestionsQueryKey,
+  useListClusters,
+  getListClustersQueryKey,
+} from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from "recharts";
-import { ArrowRight, Info, CheckCircle2, XCircle } from "lucide-react";
-import { getFlowState, hasOnboarded, hasSharedDemographics } from "@/lib/store";
-import { useEffect } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
+import { ArrowRight, Info, Trophy, ChevronRight } from "lucide-react";
+import {
+  getFlowState,
+  hasOnboarded,
+  hasSharedDemographics,
+  getAnswerCount,
+  getDominantProfileLabel,
+  recordProfileSignals,
+  getAnsweredQuestions,
+  getNextInSequence,
+  type QuestionRef,
+  type ClusterRef,
+} from "@/lib/store";
+import {
+  PredictionScoreModule,
+  CrowdShockModule,
+  DemographicSplitModule,
+  ProfileBuilderModule,
+  hasMeaningfulSplit,
+} from "@/components/result-modules";
 
 export default function ResultsPage() {
   const { id } = useParams();
@@ -24,195 +59,300 @@ export default function ResultsPage() {
   }, [id, setLocation, userAnswer]);
 
   const { data: question, isLoading: isQLoading } = useGetQuestion(id || "", {
-    query: {
-      enabled: !!id,
-      queryKey: getGetQuestionQueryKey(id || "")
-    }
+    query: { enabled: !!id, queryKey: getGetQuestionQueryKey(id || "") },
   });
 
   const { data: results, isLoading: isRLoading } = useGetQuestionResults(id || "", {
-    query: {
-      enabled: !!id && hasOnboarded(),
-      queryKey: getGetQuestionResultsQueryKey(id || "")
-    }
+    query: { enabled: !!id && hasOnboarded(), queryKey: getGetQuestionResultsQueryKey(id || "") },
   });
+
+  const { data: allQuestions } = useListQuestions(
+    {},
+    { query: { queryKey: getListQuestionsQueryKey({}) } }
+  );
+
+  const { data: allClusters } = useListClusters({
+    query: { queryKey: getListClustersQueryKey() },
+  });
+
+  // Record profile signals for this question once data is available
+  useEffect(() => {
+    if (question && id && userAnswer) {
+      recordProfileSignals(id, question.profileSignals);
+    }
+  }, [question, id, userAnswer]);
+
+  // Compute next-in-sequence info
+  const sequenceResult = useMemo(() => {
+    if (!allQuestions || !allClusters || !id) return null;
+    const answeredIds = new Set(Object.keys(getAnsweredQuestions()));
+    const questionRefs: QuestionRef[] = allQuestions.map((q) => ({
+      id: q.id,
+      topicClusterId: q.topicClusterId,
+      clusterOrder: q.clusterOrder,
+      teaserText: q.teaserText,
+    }));
+    const clusterRefs: ClusterRef[] = allClusters.map((c) => ({
+      id: c.id,
+      title: c.title,
+      questionIds: c.questionIds,
+      outro: c.outro,
+    }));
+    return getNextInSequence(id, questionRefs, clusterRefs, answeredIds);
+  }, [allQuestions, allClusters, id]);
 
   if (isQLoading || isRLoading) {
     return (
       <div className="w-full max-w-3xl mx-auto px-4 pt-12 flex flex-col gap-8">
         <Skeleton className="h-32 w-full rounded-2xl" />
-        <Skeleton className="h-[300px] w-full rounded-2xl" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Skeleton className="h-48 w-full rounded-2xl" />
-          <Skeleton className="h-48 w-full rounded-2xl" />
-        </div>
+        <Skeleton className="h-24 w-full rounded-2xl" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
+        <Skeleton className="h-[250px] w-full rounded-2xl" />
       </div>
     );
   }
 
   if (!question || !results) return null;
 
-  const wasPredictionCorrect = userPrediction === results.majorityAnswer;
+  // ─── Module selection logic ──────────────────────────────────────────────────
 
-  const chartData = results.distribution.map(d => ({
-    name: d.option,
-    value: d.percentage,
-    count: d.count
-  })).sort((a, b) => b.value - a.value);
+  const userAnswerDist = results.distribution.find((d) => d.option === userAnswer);
+  const majorityDist = results.distribution.find((d) => d.option === results.majorityAnswer);
+  const userAnswerPct = userAnswerDist?.percentage ?? 0;
+  const majorityPct = majorityDist?.percentage ?? 0;
+
+  const answerCount = getAnswerCount();
+  const dominantLabel = getDominantProfileLabel();
+
+  const showCrowdShock =
+    question.rewardTags.includes("crowd_shock") && userAnswerPct < 40 && !!userAnswer;
+
+  const showDemographicSplit =
+    question.rewardTags.includes("demographic_split") &&
+    hasSharedDemographics() &&
+    results.segments &&
+    results.segments.length > 0 &&
+    hasMeaningfulSplit(results.segments, 15);
+
+  const showProfileBuilder =
+    question.profileSignals.length > 0 && answerCount >= 3;
+
+  // ─── Chart data ──────────────────────────────────────────────────────────────
+
+  const chartData = results.distribution
+    .map((d) => ({ name: d.option, value: d.percentage, count: d.count }))
+    .sort((a, b) => b.value - a.value);
+
+  // ─── Next question info ──────────────────────────────────────────────────────
+
+  const nextQuestion = sequenceResult?.next;
+  const clusterComplete = sequenceResult?.clusterComplete ?? false;
+  const completedCluster = sequenceResult?.completedCluster;
+  const nextTeaserText = nextQuestion?.teaserText || "Next question";
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-10 w-full max-w-3xl mx-auto px-4 pt-4 md:pt-8"
+      className="flex flex-col gap-6 w-full max-w-3xl mx-auto px-4 pt-4 md:pt-8 pb-16"
     >
-      <div className="text-center flex flex-col gap-3 mb-4">
+      {/* Header */}
+      <div className="text-center flex flex-col gap-3 mb-2">
         <div className="inline-flex px-3 py-1 rounded-md bg-secondary mx-auto text-secondary-foreground text-xs font-semibold uppercase tracking-wider">
           Results
         </div>
         <h1 className="text-2xl md:text-3xl font-serif font-medium leading-tight text-balance">
           {question.prompt}
         </h1>
-        <p className="text-muted-foreground text-sm">Based on {results.totalResponses.toLocaleString()} responses</p>
+        <p className="text-muted-foreground text-sm">
+          Based on {results.totalResponses.toLocaleString()} responses
+        </p>
       </div>
 
-      {userPrediction && (
-        <Card className={`border-2 overflow-hidden ${wasPredictionCorrect ? 'border-green-500/50 bg-green-500/5' : 'border-destructive/30 bg-destructive/5'}`}>
-          <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-6 justify-between">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                {wasPredictionCorrect ? (
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-destructive" />
-                )}
-                <h3 className="font-bold text-lg">
-                  {wasPredictionCorrect ? "You read the crowd perfectly" : "You overestimated the crowd"}
-                </h3>
-              </div>
-              <p className="text-muted-foreground text-sm">
-                You predicted <span className="font-semibold text-foreground">"{userPrediction}"</span>. 
-                The actual majority chose <span className="font-semibold text-foreground">"{results.majorityAnswer}"</span>.
-              </p>
-            </div>
-            {userAnswer && (
-              <div className="bg-background border rounded-lg p-3 shrink-0 text-center min-w-[140px]">
-                <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Your Answer</div>
-                <div className="font-medium text-sm truncate max-w-[120px]" title={userAnswer}>{userAnswer}</div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Variable Reward Modules */}
+      {userAnswer && userPrediction && (
+        <PredictionScoreModule
+          userAnswer={userAnswer}
+          userPrediction={userPrediction}
+          majorityAnswer={results.majorityAnswer}
+          majorityPct={majorityPct}
+          userAnswerPct={userAnswerPct}
+        />
+      )}
+
+      {showCrowdShock && userAnswer && (
+        <CrowdShockModule userAnswer={userAnswer} userAnswerPct={userAnswerPct} />
+      )}
+
+      {showDemographicSplit && results.segments && (
+        <DemographicSplitModule segments={results.segments} />
+      )}
+
+      {showProfileBuilder && (
+        <ProfileBuilderModule
+          profileSignals={question.profileSignals}
+          dominantLabel={dominantLabel}
+          answerCount={answerCount}
+        />
       )}
 
       {/* Distribution Chart */}
-      <div className="flex flex-col gap-4">
-        <h2 className="text-xl font-serif font-bold">Overall Distribution</h2>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="flex flex-col gap-3"
+      >
+        <h2 className="text-lg font-bold">Overall Distribution</h2>
         <Card>
-          <CardContent className="p-6">
-            <div className="h-[250px] md:h-[300px] w-full">
+          <CardContent className="p-5">
+            <div className="h-[220px] md:h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
+                <BarChart
+                  data={chartData}
+                  layout="vertical"
+                  margin={{ top: 0, right: 30, left: 0, bottom: 0 }}
+                >
                   <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" width={120} axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--foreground))', fontSize: 13, fontWeight: 500}} />
-                  <RechartsTooltip 
-                    cursor={{fill: 'transparent'}}
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    width={130}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 500 }}
+                  />
+                  <RechartsTooltip
+                    cursor={{ fill: "transparent" }}
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         return (
                           <div className="bg-popover border text-popover-foreground p-3 rounded-xl shadow-lg">
                             <p className="font-medium mb-1">{payload[0].payload.name}</p>
-                            <p className="text-sm text-muted-foreground">{Number(payload[0].value).toFixed(1)}% ({payload[0].payload.count} votes)</p>
+                            <p className="text-sm text-muted-foreground">
+                              {Number(payload[0].value).toFixed(1)}% ({payload[0].payload.count} votes)
+                            </p>
                           </div>
                         );
                       }
                       return null;
                     }}
                   />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={32}>
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={28}>
                     {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.name === results.majorityAnswer ? 'hsl(var(--primary))' : 'hsl(var(--secondary-foreground) / 0.15)'} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={
+                          entry.name === userAnswer
+                            ? "hsl(var(--primary))"
+                            : entry.name === results.majorityAnswer
+                            ? "hsl(var(--primary) / 0.45)"
+                            : "hsl(var(--secondary-foreground) / 0.12)"
+                        }
+                      />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
+            {userAnswer && (
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                <span className="inline-block w-3 h-3 rounded-sm bg-primary mr-1 align-middle" />
+                Your answer
+              </p>
+            )}
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
 
-      {/* Demographic Breakdown — only shown when user shared their demographics */}
-      {hasSharedDemographics() && results.segments && results.segments.length > 0 && (
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-serif font-bold">Demographic Splits</h2>
-            <Info className="w-4 h-4 text-muted-foreground" />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {results.segments.map((segment, idx) => {
-              // Find the top option for this segment
-              const topOption = [...segment.distribution].sort((a,b) => b.percentage - a.percentage)[0];
-              
-              return (
-                <Card key={idx} className="overflow-hidden">
-                  <CardHeader className="bg-secondary/30 pb-4">
-                    <CardTitle className="text-base font-medium flex justify-between items-center">
-                      <span>{segment.groupName}</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-5 flex flex-col gap-4">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-sm text-muted-foreground">Majority chose:</span>
-                      <span className="font-semibold">{topOption?.option || "N/A"}</span>
-                    </div>
-                    
-                    <div className="flex flex-col gap-2 mt-2">
-                      {segment.distribution.slice(0, 3).map((dist, i) => (
-                        <div key={i} className="flex items-center gap-3">
-                          <div className="w-12 text-xs font-medium text-right shrink-0">{dist.percentage.toFixed(0)}%</div>
-                          <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full rounded-full ${dist.option === topOption?.option ? 'bg-primary' : 'bg-primary/30'}`} 
-                              style={{ width: `${dist.percentage}%` }} 
-                            />
-                          </div>
-                          <div className="w-24 text-xs text-muted-foreground truncate" title={dist.option}>{dist.option}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
+      {/* Demographic unlock prompt */}
+      {!hasSharedDemographics() && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card className="border-dashed border-primary/30 bg-primary/5">
+            <CardContent className="p-5 flex flex-col sm:flex-row items-center gap-4 justify-between">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <Info className="w-4 h-4 text-primary" />
+                  <p className="font-semibold text-sm">See how groups split on this</p>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Share your demographics to unlock Men vs Women, Single vs Married breakdowns.
+                </p>
+              </div>
+              <Button size="sm" className="shrink-0" asChild>
+                <Link href={`/onboarding?returnTo=/results/${id}`}>Unlock Splits</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
-      {!hasSharedDemographics() && (
-        <Card className="border-dashed border-primary/30 bg-primary/5">
-          <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
-            <div className="flex flex-col gap-1">
-              <p className="font-semibold">See how different groups answered</p>
-              <p className="text-sm text-muted-foreground">Share your demographics to unlock Men vs Women, Single vs Married breakdowns.</p>
-            </div>
-            <Button className="shrink-0 whitespace-nowrap" asChild>
-              <Link href={`/onboarding?returnTo=/results/${id}`}>
-                Unlock Splits
+      {/* Cluster Complete Card */}
+      {clusterComplete && completedCluster && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+        >
+          <Card className="border-2 border-amber-400/50 bg-amber-50/60 dark:bg-amber-900/10 overflow-hidden">
+            <CardContent className="p-6 flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-amber-600 shrink-0" />
+                <span className="font-bold text-base text-amber-900 dark:text-amber-300">
+                  You finished: {completedCluster.title}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {completedCluster.outro}
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Teased Next CTA */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="mt-4 flex flex-col items-center gap-3"
+      >
+        {nextQuestion ? (
+          <Button
+            size="lg"
+            className="h-auto min-h-14 px-6 rounded-xl text-left flex-col items-start gap-1 w-full max-w-md"
+            onClick={() => setLocation(`/question/${nextQuestion.id}`)}
+          >
+            <span className="text-xs font-normal opacity-70 uppercase tracking-wide">
+              {clusterComplete && completedCluster
+                ? `Next: ${allClusters?.find((c) => c.id === nextQuestion.topicClusterId)?.title ?? "Next cluster"}`
+                : "Up next"}
+            </span>
+            <span className="flex items-center gap-2 font-semibold text-base leading-snug">
+              {nextTeaserText}
+              <ChevronRight className="w-4 h-4 shrink-0" />
+            </span>
+          </Button>
+        ) : (
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-muted-foreground text-sm font-medium">
+              You've answered every question. Impressive.
+            </p>
+            <Button size="lg" className="h-14 px-8 rounded-xl" asChild>
+              <Link href="/profile">
+                See your full profile <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="mt-8 mb-12 flex justify-center">
-        <Button size="lg" className="h-14 px-8 rounded-xl text-md" asChild>
-          <Link href="/explore">
-            Answer Another Question <ArrowRight className="ml-2 w-5 h-5" />
-          </Link>
+          </div>
+        )}
+        <Button variant="ghost" size="sm" className="text-muted-foreground" asChild>
+          <Link href="/explore">Browse all topics</Link>
         </Button>
-      </div>
-
+      </motion.div>
     </motion.div>
   );
 }
