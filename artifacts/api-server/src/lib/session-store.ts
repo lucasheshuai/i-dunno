@@ -76,8 +76,8 @@ export async function updateSessionDemographics(
     .where(eq(sessionsTable.sessionId, sessionId));
 }
 
-export async function addSessionResponse(response: SessionResponse): Promise<void> {
-  await db
+export async function addSessionResponse(response: SessionResponse): Promise<boolean> {
+  const rows = await db
     .insert(sessionResponsesTable)
     .values({
       id: response.id,
@@ -87,7 +87,9 @@ export async function addSessionResponse(response: SessionResponse): Promise<voi
       predictedMajority: response.predictedMajority,
       createdAt: response.createdAt,
     })
-    .onConflictDoNothing();
+    .onConflictDoNothing()
+    .returning({ id: sessionResponsesTable.id });
+  return rows.length > 0;
 }
 
 export async function getAnsweredQuestionIds(sessionId: string): Promise<Set<string>> {

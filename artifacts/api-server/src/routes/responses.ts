@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { randomUUID } from "crypto";
 import { SubmitResponseBody } from "@workspace/api-zod";
-import { ensureSession, addSessionResponse } from "../lib/session-store";
+import { ensureSession, addSessionResponse, getAnsweredQuestionIds } from "../lib/session-store";
 import { questions } from "../lib/seed-data";
 
 const router: IRouter = Router();
@@ -33,6 +33,12 @@ router.post("/responses", async (req, res): Promise<void> => {
 
   await ensureSession(sessionId);
 
+  const answeredIds = await getAnsweredQuestionIds(sessionId);
+  if (answeredIds.has(questionId)) {
+    res.status(409).json({ error: "Question already answered" });
+    return;
+  }
+
   const response = {
     id: randomUUID(),
     sessionId,
@@ -42,7 +48,11 @@ router.post("/responses", async (req, res): Promise<void> => {
     createdAt: new Date().toISOString(),
   };
 
-  await addSessionResponse(response);
+  const inserted = await addSessionResponse(response);
+  if (!inserted) {
+    res.status(409).json({ error: "Question already answered" });
+    return;
+  }
 
   res.status(201).json(response);
 });
