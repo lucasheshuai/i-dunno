@@ -1,23 +1,14 @@
 import { Router, type IRouter } from "express";
 import { GetLeaderboardQueryParams } from "@workspace/api-zod";
-import { getAllSessionsIterable } from "../lib/session-store";
+import { getLeaderboardStats } from "../lib/session-store";
 import { mockResults } from "../lib/seed-data";
 
 const router: IRouter = Router();
 
-function computeStats(responses: Array<{ questionId: string; predictedMajority: string }>) {
-  const answeredCount = responses.length;
-  let correctPredictions = 0;
-
-  for (const r of responses) {
-    const result = mockResults.get(r.questionId);
-    if (result && r.predictedMajority === result.majorityAnswer) {
-      correctPredictions++;
-    }
-  }
-
-  const predictionAccuracy = answeredCount > 0 ? correctPredictions / answeredCount : 0;
-  return { answeredCount, predictionAccuracy };
+// Build once at module load: { questionId → majorityAnswer }
+const majorityAnswerMap = new Map<string, string>();
+for (const [qId, result] of mockResults.entries()) {
+  majorityAnswerMap.set(qId, result.majorityAnswer);
 }
 
 function computeBadge(answeredCount: number, accuracy: number): string {
@@ -27,6 +18,76 @@ function computeBadge(answeredCount: number, accuracy: number): string {
   return "Social Realist";
 }
 
+// ─── 30-second leaderboard cache ─────────────────────────────────────────────
+
+interface RankedEntry {
+  sessionId: string;
+  rank: number;
+  handle: string;
+  answeredCount: number;
+  predictionAccuracy: number;
+  badge: string;
+  isCurrentUser: boolean;
+}
+
+interface CachedLeaderboard {
+  ranked: RankedEntry[];
+  totalParticipants: number;
+  expiresAt: number;
+}
+
+let leaderboardCache: CachedLeaderboard | null = null;
+const CACHE_TTL_MS = 30_000;
+
+async function getRankedLeaderboard(): Promise<Pick<CachedLeaderboard, "ranked" | "totalParticipants">> {
+  const now = Date.now();
+  if (leaderboardCache && now < leaderboardCache.expiresAt) {
+    return leaderboardCache;
+  }
+
+  // Single SQL aggregation: no individual response rows loaded into memory
+  const rows = await getLeaderboardStats(majorityAnswerMap);
+
+  const entries = rows
+    .map((r) => {
+      const predictionAccuracy = r.answeredCount > 0 ? r.correctPredictions / r.answeredCount : 0;
+      return {
+        sessionId: r.sessionId,
+        rank: 0,
+        handle: r.nickname ?? r.sessionId.slice(0, 6),
+        answeredCount: r.answeredCount,
+        predictionAccuracy,
+        badge: computeBadge(r.answeredCount, predictionAccuracy),
+        isCurrentUser: false,
+      };
+    })
+    .sort((a, b) => {
+      if (b.predictionAccuracy !== a.predictionAccuracy) return b.predictionAccuracy - a.predictionAccuracy;
+      return b.answeredCount - a.answeredCount;
+    });
+
+  // Assign dense ranks (tied sessions share the same rank)
+  let currentRank = 1;
+  for (let i = 0; i < entries.length; i++) {
+    if (i > 0) {
+      const prev = entries[i - 1];
+      if (
+        prev.predictionAccuracy !== entries[i].predictionAccuracy ||
+        prev.answeredCount !== entries[i].answeredCount
+      ) {
+        currentRank = i + 1;
+      }
+    }
+    entries[i].rank = currentRank;
+  }
+
+  const result = { ranked: entries, totalParticipants: entries.length };
+  leaderboardCache = { ...result, expiresAt: now + CACHE_TTL_MS };
+  return result;
+}
+
+// ─── Route ────────────────────────────────────────────────────────────────────
+
 router.get("/leaderboard", async (req, res): Promise<void> => {
   const parsed = GetLeaderboardQueryParams.safeParse(req.query);
   if (!parsed.success) {
@@ -35,73 +96,23 @@ router.get("/leaderboard", async (req, res): Promise<void> => {
   }
 
   const { sessionId } = parsed.data;
+  const { ranked, totalParticipants } = await getRankedLeaderboard();
 
-  interface RankedEntry {
-    sessionId: string;
-    rank: number;
-    handle: string;
-    answeredCount: number;
-    predictionAccuracy: number;
-    badge: string;
-    isCurrentUser: boolean;
-  }
+  // Stamp isCurrentUser per request (not cached, session-specific)
+  type PublicEntry = Omit<RankedEntry, "sessionId"> & { isCurrentUser: boolean };
 
-  const allSessions = await getAllSessionsIterable();
-  const allEntries: Omit<RankedEntry, "rank" | "isCurrentUser">[] = [];
+  const top50: PublicEntry[] = ranked
+    .slice(0, 50)
+    .map(({ sessionId: sid, ...rest }) => ({ ...rest, isCurrentUser: sid === sessionId }));
 
-  for (const session of allSessions) {
-    const { answeredCount, predictionAccuracy } = computeStats(session.responses);
-    if (answeredCount === 0) continue;
-    allEntries.push({
-      sessionId: session.sessionId,
-      handle: session.nickname ?? session.sessionId.slice(0, 6),
-      answeredCount,
-      predictionAccuracy,
-      badge: computeBadge(answeredCount, predictionAccuracy),
-    });
-  }
-
-  allEntries.sort((a, b) => {
-    if (b.predictionAccuracy !== a.predictionAccuracy) {
-      return b.predictionAccuracy - a.predictionAccuracy;
-    }
-    return b.answeredCount - a.answeredCount;
-  });
-
-  const ranked: RankedEntry[] = [];
-  let currentRank = 1;
-  for (let i = 0; i < allEntries.length; i++) {
-    const prev = i > 0 ? allEntries[i - 1] : null;
-    if (
-      prev &&
-      prev.predictionAccuracy === allEntries[i].predictionAccuracy &&
-      prev.answeredCount === allEntries[i].answeredCount
-    ) {
-      currentRank = ranked[i - 1].rank;
-    } else {
-      currentRank = i + 1;
-    }
-    ranked.push({
-      ...allEntries[i],
-      rank: currentRank,
-      isCurrentUser: allEntries[i].sessionId === sessionId,
-    });
-  }
-
-  const totalParticipants = ranked.length;
-
-  const top50Slice = ranked.slice(0, 50);
-  const top50SessionIds = new Set(top50Slice.map((e) => e.sessionId));
-  const top50 = top50Slice.map(({ sessionId: _sid, ...rest }) => rest);
-
+  const top50SessionIds = new Set(ranked.slice(0, 50).map((e) => e.sessionId));
   const callerEntry = sessionId ? ranked.find((e) => e.sessionId === sessionId) : undefined;
   const currentUserRank: number | null = callerEntry ? callerEntry.rank : null;
 
-  const entries = [...top50];
-
+  const entries: PublicEntry[] = [...top50];
   if (callerEntry && !top50SessionIds.has(callerEntry.sessionId)) {
     const { sessionId: _sid, ...rest } = callerEntry;
-    entries.push(rest);
+    entries.push({ ...rest, isCurrentUser: true });
   }
 
   res.json({ entries, currentUserRank, totalParticipants });

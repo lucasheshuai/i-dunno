@@ -129,6 +129,56 @@ export async function getAllSessionsIterable(): Promise<Session[]> {
   }));
 }
 
+export interface LeaderboardRow {
+  sessionId: string;
+  nickname: string | null;
+  answeredCount: number;
+  correctPredictions: number;
+}
+
+/**
+ * Compute per-session leaderboard stats in a single SQL aggregation.
+ * Accepts a map of { questionId → expectedMajorityAnswer } from seed data
+ * so correct-prediction counting is pushed into SQL rather than loaded row-by-row.
+ * Only returns sessions with at least 1 answer.
+ */
+export async function getLeaderboardStats(
+  majorityAnswerMap: Map<string, string>,
+): Promise<LeaderboardRow[]> {
+  if (majorityAnswerMap.size === 0) return [];
+
+  // Build a SQL CASE WHEN expression to count correct predictions in the DB.
+  // Shape: SUM(CASE WHEN (qid='q1' AND pm='Yes') WHEN (qid='q2' AND pm='No') ... ELSE 0 END)
+  const cases = [...majorityAnswerMap.entries()].map(
+    ([qId, majority]) =>
+      sql`WHEN (${sessionResponsesTable.questionId} = ${qId} AND ${sessionResponsesTable.predictedMajority} = ${majority}) THEN 1`,
+  );
+
+  const caseExpr = sql`SUM(CASE ${sql.join(cases, sql` `)} ELSE 0 END)`;
+
+  const rows = await db
+    .select({
+      sessionId: sessionsTable.sessionId,
+      nickname: sessionsTable.nickname,
+      answeredCount: sql<number>`COUNT(${sessionResponsesTable.id})::int`,
+      correctPredictions: sql<number>`${caseExpr}::int`,
+    })
+    .from(sessionsTable)
+    .innerJoin(
+      sessionResponsesTable,
+      eq(sessionsTable.sessionId, sessionResponsesTable.sessionId),
+    )
+    .groupBy(sessionsTable.sessionId, sessionsTable.nickname)
+    .having(sql`COUNT(${sessionResponsesTable.id}) > 0`);
+
+  return rows.map((r) => ({
+    sessionId: r.sessionId,
+    nickname: r.nickname,
+    answeredCount: r.answeredCount,
+    correctPredictions: r.correctPredictions ?? 0,
+  }));
+}
+
 export async function getGlobalStats(): Promise<{ totalSessions: number; totalResponses: number }> {
   const rows = await db.execute<{ total_sessions: string; total_responses: string }>(
     sql`
