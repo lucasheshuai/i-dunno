@@ -94,6 +94,12 @@ export const getResponse = (questionId: string): ResponseRecord | null => {
   return getHistory()[questionId] || null;
 };
 
+export const getRecentResponses = (n: number): ResponseRecord[] => {
+  const history = getHistory();
+  // Return the last N entries; insertion order is preserved in JS objects
+  return Object.values(history).slice(-n);
+};
+
 // In-memory flow state for current in-progress question (answer before prediction submitted)
 export const flowState: Record<string, { answer?: string; prediction?: string }> = {};
 
