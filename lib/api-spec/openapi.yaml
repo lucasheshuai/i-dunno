@@ -73,7 +73,13 @@ paths:
     get:
       operationId: getTodayQuestion
       tags: [questions]
-      summary: Get today's featured question
+      summary: Get first unanswered question in cluster 1, or cluster 1's first question
+      parameters:
+        - name: sessionId
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: Today's question

@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { questions, mockResults } from "../lib/seed-data";
+import { sessions } from "../lib/session-store";
 import {
   ListQuestionsQueryParams,
   GetQuestionParams,
@@ -23,10 +24,24 @@ router.get("/questions", async (req, res): Promise<void> => {
   res.json(filtered);
 });
 
-router.get("/questions/today", async (_req, res): Promise<void> => {
+router.get("/questions/today", async (req, res): Promise<void> => {
+  const sessionId = typeof req.query.sessionId === "string" ? req.query.sessionId : null;
   const active = questions.filter((q) => q.status === "active");
-  const first = active.find((q) => q.topicClusterId === "c1" && q.clusterOrder === 1) ?? active[0];
-  res.json(first);
+  const c1Questions = active
+    .filter((q) => q.topicClusterId === "c1")
+    .sort((a, b) => a.clusterOrder - b.clusterOrder);
+
+  if (sessionId) {
+    const session = sessions.get(sessionId);
+    const answeredIds = new Set(session?.responses.map((r) => r.questionId) ?? []);
+    const firstUnanswered = c1Questions.find((q) => !answeredIds.has(q.id));
+    if (firstUnanswered) {
+      res.json(firstUnanswered);
+      return;
+    }
+  }
+
+  res.json(c1Questions[0] ?? active[0]);
 });
 
 router.get("/questions/:id", async (req, res): Promise<void> => {

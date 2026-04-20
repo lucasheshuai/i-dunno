@@ -22,6 +22,7 @@ import type {
   ErrorResponse,
   GetLeaderboardParams,
   GetProfileParams,
+  GetTodayQuestionParams,
   HealthStatus,
   LeaderboardResponse,
   ListQuestionsParams,
@@ -287,43 +288,62 @@ export function useListQuestions<
 }
 
 /**
- * @summary Get today's featured question
+ * @summary Get first unanswered question in cluster 1, or cluster 1's first question
  */
-export const getGetTodayQuestionUrl = () => {
-  return `/api/questions/today`;
+export const getGetTodayQuestionUrl = (params?: GetTodayQuestionParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/questions/today?${stringifiedParams}`
+    : `/api/questions/today`;
 };
 
 export const getTodayQuestion = async (
+  params?: GetTodayQuestionParams,
   options?: RequestInit,
 ): Promise<Question> => {
-  return customFetch<Question>(getGetTodayQuestionUrl(), {
+  return customFetch<Question>(getGetTodayQuestionUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetTodayQuestionQueryKey = () => {
-  return [`/api/questions/today`] as const;
+export const getGetTodayQuestionQueryKey = (
+  params?: GetTodayQuestionParams,
+) => {
+  return [`/api/questions/today`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetTodayQuestionQueryOptions = <
   TData = Awaited<ReturnType<typeof getTodayQuestion>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getTodayQuestion>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetTodayQuestionParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTodayQuestion>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetTodayQuestionQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getGetTodayQuestionQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getTodayQuestion>>
-  > = ({ signal }) => getTodayQuestion({ signal, ...requestOptions });
+  > = ({ signal }) => getTodayQuestion(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getTodayQuestion>>,
@@ -338,21 +358,24 @@ export type GetTodayQuestionQueryResult = NonNullable<
 export type GetTodayQuestionQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get today's featured question
+ * @summary Get first unanswered question in cluster 1, or cluster 1's first question
  */
 
 export function useGetTodayQuestion<
   TData = Awaited<ReturnType<typeof getTodayQuestion>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getTodayQuestion>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetTodayQuestionQueryOptions(options);
+>(
+  params?: GetTodayQuestionParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTodayQuestion>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetTodayQuestionQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

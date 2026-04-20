@@ -44,78 +44,42 @@ interface AggregatedResult {
 export const clusters: TopicCluster[] = [
   {
     id: "c1",
-    title: "Dating Standards",
+    title: "Attraction & Dating Signals",
     intro:
-      "How we approach dating says a lot about what we really believe — not what we say we believe. These questions reveal the unspoken rules people actually follow.",
+      "How we approach dating reveals what we really believe — not what we say we believe. These questions expose the unspoken rules people actually follow when they're sizing someone up.",
     outro:
-      "You've mapped out the unspoken rules of modern dating. The crowd agrees more than you'd expect — but there are real fault lines below the surface.",
-    questionIds: ["q1", "q2", "q3", "q4", "q5"],
+      "You've mapped the hidden logic behind modern attraction. The crowd agrees more than you'd expect — but there are real fault lines below the surface.",
+    questionIds: ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9"],
   },
   {
     id: "c2",
-    title: "What Drives Attraction",
+    title: "Commitment & Marriage",
     intro:
-      "Attraction is messier than anyone admits. What we feel and what we claim to value are rarely the same thing.",
+      "Marriage is where society's hidden rules get most exposed — who gets judged, what's expected, and what people won't say out loud about love lasting.",
     outro:
-      "Now you've seen what actually drives attraction. The answers here tend to surprise people — see if you read them right.",
-    questionIds: ["q6", "q7", "q8", "q9"],
+      "Commitment questions consistently split along lines people don't expect. The crowd's answers on what makes love last often contradict what people say in conversation.",
+    questionIds: ["q10", "q11", "q12", "q13", "q14", "q15", "q16", "q17", "q18"],
   },
   {
     id: "c3",
-    title: "Marriage & Status",
+    title: "Gender Pressure",
     intro:
-      "Marriage is where society's hidden rules get most exposed. What people expect, who gets judged, and what they won't say out loud.",
+      "Gender expectations in relationships are shifting — but not always in the direction people assume. Everyone claims to dislike double standards, but fewer recognize the ones they hold.",
     outro:
-      "Marriage questions consistently split along lines people don't expect. Your perspective on status and partnership has been noted.",
-    questionIds: ["q10", "q11", "q12", "q13", "q14"],
+      "Gender pressure is more complicated than any simple narrative. Double standards persist because they feel like common sense to the people who hold them. Did the crowd surprise you?",
+    questionIds: ["q19", "q20", "q21", "q22", "q23", "q24", "q25", "q26", "q27"],
   },
   {
     id: "c4",
-    title: "What Makes Love Last",
+    title: "Money & Compatibility",
     intro:
-      "Everyone has a theory about what makes relationships last. Here's what the crowd actually believes — which may not match the theory.",
+      "Money is the topic most couples avoid — until it's unavoidable. How people handle money alone says more about how they'll handle it together.",
     outro:
-      "The crowd's answers on lasting love often contradict what people say in conversation. Did you see it coming?",
-    questionIds: ["q15", "q16", "q17", "q18"],
+      "Financial compatibility is one of the top predictors of relationship outcomes. The crowd's answers reveal what most people won't say directly about money and trust.",
+    questionIds: ["q28", "q29", "q30", "q31", "q32", "q33", "q34", "q35"],
   },
   {
     id: "c5",
-    title: "Gender Expectations",
-    intro:
-      "Gender expectations in relationships are shifting — but not always in the direction people assume. These questions map the real fault lines.",
-    outro:
-      "Gender expectations are more complicated than any simple narrative. Your answers place you clearly within that complexity.",
-    questionIds: ["q19", "q20", "q21", "q22"],
-  },
-  {
-    id: "c6",
-    title: "Double Standards",
-    intro:
-      "Everyone claims to dislike double standards. Fewer people recognize the ones they hold. These questions put that to the test.",
-    outro:
-      "Double standards persist precisely because they feel like common sense to the people who hold them. Did the crowd surprise you?",
-    questionIds: ["q23", "q24", "q25", "q26", "q27"],
-  },
-  {
-    id: "c7",
-    title: "Money in Relationships",
-    intro:
-      "Money is the topic most couples avoid — until it's unavoidable. These questions map where the real tensions live.",
-    outro:
-      "Financial compatibility is one of the top predictors of relationship outcomes. The crowd's answers reveal what most people won't say directly.",
-    questionIds: ["q28", "q29", "q30", "q31"],
-  },
-  {
-    id: "c8",
-    title: "Financial Patterns",
-    intro:
-      "How people handle money alone says more about how they'll handle it together. These questions go deeper into financial honesty and trust.",
-    outro:
-      "Financial honesty is harder than it sounds. Your answers here reveal how you think about money as a relationship variable.",
-    questionIds: ["q32", "q33", "q34", "q35"],
-  },
-  {
-    id: "c9",
     title: "Values & Connection",
     intro:
       "What people claim to value in relationships and what actually drives their decisions are often different things. These questions test that gap.",
@@ -124,7 +88,7 @@ export const clusters: TopicCluster[] = [
     questionIds: ["q36", "q37", "q38", "q39", "q40"],
   },
   {
-    id: "c10",
+    id: "c6",
     title: "Modern Love & Regret",
     intro:
       "What we regret, what we can no longer accept, and where modern life creates hidden relationship costs. The questions that cut closest to home.",
@@ -133,7 +97,7 @@ export const clusters: TopicCluster[] = [
     questionIds: ["q41", "q42", "q43", "q49", "q50"],
   },
   {
-    id: "c11",
+    id: "c7",
     title: "Career Tradeoffs",
     intro:
       "Career ambition and love are in a quiet conflict most people refuse to name directly. These questions put the conflict on the table.",
@@ -251,7 +215,7 @@ export const questions: Question[] = [
     profileSignals: ["progressive", "traditionalist"],
   },
 
-  // ─── Cluster 2: What Drives Attraction ──────────────────────────────────────
+  // ─── Cluster 1 continued: What Drives Attraction ────────────────────────────
   {
     id: "q6",
     category: "Dating",
@@ -265,8 +229,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 5880,
-    topicClusterId: "c2",
-    clusterOrder: 1,
+    topicClusterId: "c1",
+    clusterOrder: 6,
     teaserText: "Next: who is under more pressure to seem interesting?",
     followUpQuestionIds: ["q7", "q8"],
     rewardTags: ["prediction_score", "demographic_split"],
@@ -286,8 +250,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 4410,
-    topicClusterId: "c2",
-    clusterOrder: 2,
+    topicClusterId: "c1",
+    clusterOrder: 7,
     teaserText: "Next: what do people value more than they openly admit?",
     followUpQuestionIds: ["q8", "q9"],
     rewardTags: ["prediction_score", "demographic_split"],
@@ -306,8 +270,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 6520,
-    topicClusterId: "c2",
-    clusterOrder: 3,
+    topicClusterId: "c1",
+    clusterOrder: 8,
     teaserText: "Next: who is more likely to lose interest when things feel too easy?",
     followUpQuestionIds: ["q9"],
     rewardTags: ["prediction_score", "crowd_shock"],
@@ -327,8 +291,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 4090,
-    topicClusterId: "c2",
-    clusterOrder: 4,
+    topicClusterId: "c1",
+    clusterOrder: 9,
     teaserText:
       "Next: a question about marriage where men and women disagreed most",
     followUpQuestionIds: ["q10"],
@@ -351,7 +315,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 5670,
-    topicClusterId: "c3",
+    topicClusterId: "c2",
     clusterOrder: 1,
     teaserText:
       "Next: who faces more pressure to be financially established before marriage?",
@@ -373,7 +337,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 6180,
-    topicClusterId: "c3",
+    topicClusterId: "c2",
     clusterOrder: 2,
     teaserText:
       "Next: what do people actually judge when deciding if a marriage is a good match?",
@@ -395,7 +359,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 4830,
-    topicClusterId: "c3",
+    topicClusterId: "c2",
     clusterOrder: 3,
     teaserText:
       "Next: the source of most long-term tension in marriage today",
@@ -416,7 +380,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 7290,
-    topicClusterId: "c3",
+    topicClusterId: "c2",
     clusterOrder: 4,
     teaserText: "Next: who is more judged for marrying down?",
     followUpQuestionIds: ["q14"],
@@ -436,7 +400,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 3870,
-    topicClusterId: "c3",
+    topicClusterId: "c2",
     clusterOrder: 5,
     teaserText:
       "Next: what the crowd says matters most for a stable marriage",
@@ -459,8 +423,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 8410,
-    topicClusterId: "c4",
-    clusterOrder: 1,
+    topicClusterId: "c2",
+    clusterOrder: 6,
     teaserText:
       "Next: are young adults becoming more practical or more romantic about marriage?",
     followUpQuestionIds: ["q16", "q17"],
@@ -481,8 +445,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 5540,
-    topicClusterId: "c4",
-    clusterOrder: 2,
+    topicClusterId: "c2",
+    clusterOrder: 7,
     teaserText: "Next: what is most likely to delay marriage today?",
     followUpQuestionIds: ["q17", "q18"],
     rewardTags: ["prediction_score", "crowd_shock"],
@@ -501,8 +465,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 6750,
-    topicClusterId: "c4",
-    clusterOrder: 3,
+    topicClusterId: "c2",
+    clusterOrder: 8,
     teaserText:
       "Next: who is expected to compromise more after getting married?",
     followUpQuestionIds: ["q18"],
@@ -523,8 +487,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 4320,
-    topicClusterId: "c4",
-    clusterOrder: 4,
+    topicClusterId: "c2",
+    clusterOrder: 9,
     teaserText:
       "Next: who is expected to provide more emotional support in relationships?",
     followUpQuestionIds: ["q19"],
@@ -547,7 +511,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 5960,
-    topicClusterId: "c5",
+    topicClusterId: "c3",
     clusterOrder: 1,
     teaserText:
       "Next: who gets judged more harshly for being too ambitious?",
@@ -569,7 +533,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 4580,
-    topicClusterId: "c5",
+    topicClusterId: "c3",
     clusterOrder: 2,
     teaserText:
       "Next: who is more socially allowed to prioritize career over relationships?",
@@ -591,7 +555,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 5110,
-    topicClusterId: "c5",
+    topicClusterId: "c3",
     clusterOrder: 3,
     teaserText:
       "Next: whose insecurity is more socially tolerated in modern relationships?",
@@ -613,7 +577,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 3720,
-    topicClusterId: "c5",
+    topicClusterId: "c3",
     clusterOrder: 4,
     teaserText: "Next: who is under more pressure to 'have it all' today?",
     followUpQuestionIds: ["q23"],
@@ -635,8 +599,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 6030,
-    topicClusterId: "c6",
-    clusterOrder: 1,
+    topicClusterId: "c3",
+    clusterOrder: 5,
     teaserText:
       "Next: who gets judged more harshly for aging in the dating market?",
     followUpQuestionIds: ["q24", "q25"],
@@ -657,8 +621,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 7480,
-    topicClusterId: "c6",
-    clusterOrder: 2,
+    topicClusterId: "c3",
+    clusterOrder: 6,
     teaserText:
       "Next: who gets more criticism for openly caring about a partner's income?",
     followUpQuestionIds: ["q25", "q26"],
@@ -679,8 +643,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 4890,
-    topicClusterId: "c6",
-    clusterOrder: 3,
+    topicClusterId: "c3",
+    clusterOrder: 7,
     teaserText:
       "Next: whose relationship struggles are taken less seriously in public discussion?",
     followUpQuestionIds: ["q26", "q27"],
@@ -701,8 +665,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 3560,
-    topicClusterId: "c6",
-    clusterOrder: 4,
+    topicClusterId: "c3",
+    clusterOrder: 8,
     teaserText:
       "Next: who is more expected to stay emotionally composed no matter what?",
     followUpQuestionIds: ["q27"],
@@ -723,8 +687,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 5340,
-    topicClusterId: "c6",
-    clusterOrder: 5,
+    topicClusterId: "c3",
+    clusterOrder: 9,
     teaserText:
       "Next: the money question that creates the most disagreement in relationships",
     followUpQuestionIds: ["q28"],
@@ -747,7 +711,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 6620,
-    topicClusterId: "c7",
+    topicClusterId: "c4",
     clusterOrder: 1,
     teaserText:
       "Next: who is more likely to spend money as a form of self-reward?",
@@ -769,7 +733,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 4270,
-    topicClusterId: "c7",
+    topicClusterId: "c4",
     clusterOrder: 2,
     teaserText:
       "Next: what signal does spending send in dating that people won't admit?",
@@ -790,7 +754,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 5090,
-    topicClusterId: "c7",
+    topicClusterId: "c4",
     clusterOrder: 3,
     teaserText:
       "Next: what matters most for long-term financial compatibility?",
@@ -811,7 +775,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 7810,
-    topicClusterId: "c7",
+    topicClusterId: "c4",
     clusterOrder: 4,
     teaserText:
       "Next: who gets more judgment for not earning enough in a relationship?",
@@ -835,8 +799,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 5450,
-    topicClusterId: "c8",
-    clusterOrder: 1,
+    topicClusterId: "c4",
+    clusterOrder: 5,
     teaserText:
       "Next: what actually feels most attractive in a long-term partner financially?",
     followUpQuestionIds: ["q33", "q34"],
@@ -857,8 +821,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 8150,
-    topicClusterId: "c8",
-    clusterOrder: 2,
+    topicClusterId: "c4",
+    clusterOrder: 6,
     teaserText:
       "Next: who is more likely to hide financial stress from a partner?",
     followUpQuestionIds: ["q34", "q35"],
@@ -879,8 +843,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 4700,
-    topicClusterId: "c8",
-    clusterOrder: 3,
+    topicClusterId: "c4",
+    clusterOrder: 7,
     teaserText:
       "Next: what is most likely to break financial trust in a relationship?",
     followUpQuestionIds: ["q35"],
@@ -900,8 +864,8 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 6340,
-    topicClusterId: "c8",
-    clusterOrder: 4,
+    topicClusterId: "c4",
+    clusterOrder: 8,
     teaserText:
       "Next: what the crowd says matters most in choosing a long-term partner",
     followUpQuestionIds: ["q36"],
@@ -924,7 +888,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 9200,
-    topicClusterId: "c9",
+    topicClusterId: "c5",
     clusterOrder: 1,
     teaserText:
       "Next: which feeling matters more in a relationship?",
@@ -945,7 +909,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 7640,
-    topicClusterId: "c9",
+    topicClusterId: "c5",
     clusterOrder: 2,
     teaserText:
       "Next: what is hardest to compromise on in a serious relationship?",
@@ -967,7 +931,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 5980,
-    topicClusterId: "c9",
+    topicClusterId: "c5",
     clusterOrder: 3,
     teaserText: "Next: what actually makes a relationship last?",
     followUpQuestionIds: ["q39", "q40"],
@@ -987,7 +951,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 8760,
-    topicClusterId: "c9",
+    topicClusterId: "c5",
     clusterOrder: 4,
     teaserText:
       "Next: are people today driven more by personal happiness or social expectation?",
@@ -1009,7 +973,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 6110,
-    topicClusterId: "c9",
+    topicClusterId: "c5",
     clusterOrder: 5,
     teaserText:
       "Next: the type of relationship regret that shows up most often",
@@ -1032,7 +996,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 7380,
-    topicClusterId: "c10",
+    topicClusterId: "c6",
     clusterOrder: 1,
     teaserText:
       "Next: what is becoming less acceptable in modern relationships?",
@@ -1054,7 +1018,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 5720,
-    topicClusterId: "c10",
+    topicClusterId: "c6",
     clusterOrder: 2,
     teaserText:
       "Next: what matters most when conflict happens in a relationship?",
@@ -1075,7 +1039,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 6490,
-    topicClusterId: "c10",
+    topicClusterId: "c6",
     clusterOrder: 3,
     teaserText:
       "Next: the hidden conflict that dual-career couples almost never name directly",
@@ -1097,7 +1061,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 5270,
-    topicClusterId: "c10",
+    topicClusterId: "c6",
     clusterOrder: 4,
     teaserText:
       "Next: who is more likely to feel that career success has made love harder?",
@@ -1119,7 +1083,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 3820,
-    topicClusterId: "c10",
+    topicClusterId: "c6",
     clusterOrder: 5,
     teaserText:
       "Next: who is more likely to change life plans for a partner's career?",
@@ -1143,7 +1107,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 4950,
-    topicClusterId: "c11",
+    topicClusterId: "c7",
     clusterOrder: 1,
     teaserText:
       "Next: what creates the most strain between career and relationships?",
@@ -1165,7 +1129,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 6800,
-    topicClusterId: "c11",
+    topicClusterId: "c7",
     clusterOrder: 2,
     teaserText:
       "Next: who faces more pressure to be successful before seriously dating?",
@@ -1187,7 +1151,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 5630,
-    topicClusterId: "c11",
+    topicClusterId: "c7",
     clusterOrder: 3,
     teaserText:
       "Next: what is actually hardest to handle when career ambitions differ?",
@@ -1208,7 +1172,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 7050,
-    topicClusterId: "c11",
+    topicClusterId: "c7",
     clusterOrder: 4,
     teaserText:
       "Next: what matters most for career compatibility in a relationship?",
@@ -1230,7 +1194,7 @@ export const questions: Question[] = [
     ],
     status: "active",
     responseCount: 4480,
-    topicClusterId: "c11",
+    topicClusterId: "c7",
     clusterOrder: 5,
     teaserText:
       "You've reached the end. Return to explore other insight clusters.",

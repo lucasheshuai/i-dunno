@@ -9,7 +9,7 @@ import { isQuestionAnswered } from "@/lib/store";
 export default function Home() {
   const [, setLocation] = useLocation();
 
-  const { data: todayQuestion, isLoading: isQuestionLoading } = useGetTodayQuestion({
+  const { data: todayQuestion, isLoading: isQuestionLoading } = useGetTodayQuestion(undefined, {
     query: {
       queryKey: getGetTodayQuestionQueryKey(),
     }

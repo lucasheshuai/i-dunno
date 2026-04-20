@@ -147,6 +147,10 @@ export type ListQuestionsParams = {
   category?: string;
 };
 
+export type GetTodayQuestionParams = {
+  sessionId?: string;
+};
+
 export type GetProfileParams = {
   sessionId: string;
 };

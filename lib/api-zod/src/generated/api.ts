@@ -58,8 +58,12 @@ export const ListQuestionsResponseItem = zod.object({
 export const ListQuestionsResponse = zod.array(ListQuestionsResponseItem);
 
 /**
- * @summary Get today's featured question
+ * @summary Get first unanswered question in cluster 1, or cluster 1's first question
  */
+export const GetTodayQuestionQueryParams = zod.object({
+  sessionId: zod.coerce.string().optional(),
+});
+
 export const GetTodayQuestionResponse = zod.object({
   id: zod.string(),
   category: zod.enum([
