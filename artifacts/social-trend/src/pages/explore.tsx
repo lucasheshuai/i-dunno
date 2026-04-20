@@ -7,10 +7,9 @@ import {
 } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { getAnsweredQuestions, isQuestionAnswered } from "@/lib/store";
-import { ChevronRight, TrendingUp, Target, CheckCircle2, Lock } from "lucide-react";
+import { getAnsweredQuestions, isQuestionAnswered, getRecentResponses } from "@/lib/store";
+import { ChevronRight, TrendingUp, Target, CheckCircle2 } from "lucide-react";
 import { useMemo } from "react";
 
 export default function Explore() {
@@ -49,7 +48,7 @@ export default function Explore() {
     });
   }, [allClusters, allQuestions, answeredIds]);
 
-  // Trending Divides: questions tagged demographic_split, prioritise unanswered
+  // Trending Divides: questions tagged demographic_split, unanswered first
   const trendingDivides = useMemo(() => {
     if (!allQuestions) return [];
     return allQuestions
@@ -58,18 +57,35 @@ export default function Explore() {
       .slice(0, 4);
   }, [allQuestions]);
 
-  // Most Misread: questions tagged crowd_shock (designed to surprise most predictors)
+  // Most Misread: questions where user mispredicted (answer !== prediction as proxy)
+  // plus questions tagged crowd_shock that are unanswered — the whole point is
+  // surfacing questions that tend to trip people up.
   const mostMisread = useMemo(() => {
     if (!allQuestions) return [];
-    return allQuestions
-      .filter(q => q.rewardTags.includes("crowd_shock"))
-      .sort((a, b) => (isQuestionAnswered(a.id) ? 1 : 0) - (isQuestionAnswered(b.id) ? 1 : 0))
-      .slice(0, 4);
-  }, [allQuestions]);
 
-  const navigateToCluster = (firstUnansweredId: string | undefined, fallbackId: string) => {
-    setLocation(`/question/${firstUnansweredId ?? fallbackId}`);
-  };
+    // IDs of questions where user went against their own prediction (proxy for misprediction)
+    const recentResponses = getRecentResponses(50);
+    const mispredictedIds = new Set(
+      recentResponses
+        .filter(r => r.answer !== r.prediction)
+        .map(r => r.questionId)
+    );
+
+    const scored = allQuestions
+      .filter(q => q.rewardTags.includes("crowd_shock") || mispredictedIds.has(q.id))
+      .map(q => ({
+        q,
+        score:
+          (mispredictedIds.has(q.id) ? 2 : 0) +          // user already surprised themselves
+          (q.rewardTags.includes("crowd_shock") ? 1 : 0) + // flagged as surprising
+          (isQuestionAnswered(q.id) ? 0 : 1),              // prefer unanswered
+      }))
+      .sort((a, b) => b.score - a.score)
+      .map(({ q }) => q)
+      .slice(0, 4);
+
+    return scored;
+  }, [allQuestions]);
 
   if (isLoading) {
     return (
@@ -109,7 +125,6 @@ export default function Explore() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {clusterProgress.map(({ cluster, answered, total, firstUnanswered, questions, isComplete }, idx) => {
             const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
-            const canContinue = !isComplete && firstUnanswered;
 
             return (
               <motion.div
@@ -121,11 +136,11 @@ export default function Explore() {
                 <Card
                   className={`group cursor-pointer h-full transition-all hover:border-primary/40 hover:shadow-sm ${isComplete ? "bg-muted/30" : ""}`}
                   onClick={() => {
-                    if (canContinue) {
+                    if (firstUnanswered) {
                       setLocation(`/question/${firstUnanswered.id}`);
-                    } else if (isComplete) {
-                      // Re-read any question from completed cluster
-                      setLocation(`/results/${questions[0]?.id}`);
+                    } else if (questions.length > 0) {
+                      // Cluster complete — view first question's results
+                      setLocation(`/results/${questions[0].id}`);
                     }
                   }}
                 >
@@ -156,7 +171,11 @@ export default function Explore() {
                         </span>
                       </div>
                       <span className="text-[11px] font-medium text-muted-foreground">
-                        {isComplete ? "Completed ✓" : answered === 0 ? `${total} questions` : `${total - answered} remaining`}
+                        {isComplete
+                          ? "Completed ✓"
+                          : answered === 0
+                          ? `${total} questions`
+                          : `${total - answered} remaining`}
                       </span>
                     </div>
                   </CardContent>
@@ -194,13 +213,9 @@ export default function Explore() {
               >
                 <Card
                   className="group cursor-pointer hover:border-blue-400/50 hover:shadow-sm transition-all"
-                  onClick={() => {
-                    if (isQuestionAnswered(q.id)) {
-                      setLocation(`/results/${q.id}`);
-                    } else {
-                      setLocation(`/question/${q.id}`);
-                    }
-                  }}
+                  onClick={() =>
+                    setLocation(isQuestionAnswered(q.id) ? `/results/${q.id}` : `/question/${q.id}`)
+                  }
                 >
                   <CardContent className="p-4 flex items-center gap-4 justify-between">
                     <div className="flex flex-col gap-1 min-w-0">
@@ -242,7 +257,7 @@ export default function Explore() {
             </h2>
           </div>
           <p className="text-sm text-muted-foreground -mt-2">
-            Questions where most people get the crowd wrong.
+            Questions where most people get the crowd wrong — including you.
           </p>
           <div className="flex flex-col gap-3">
             {mostMisread.map((q, idx) => (
@@ -254,13 +269,9 @@ export default function Explore() {
               >
                 <Card
                   className="group cursor-pointer hover:border-amber-400/50 hover:shadow-sm transition-all"
-                  onClick={() => {
-                    if (isQuestionAnswered(q.id)) {
-                      setLocation(`/results/${q.id}`);
-                    } else {
-                      setLocation(`/question/${q.id}`);
-                    }
-                  }}
+                  onClick={() =>
+                    setLocation(isQuestionAnswered(q.id) ? `/results/${q.id}` : `/question/${q.id}`)
+                  }
                 >
                   <CardContent className="p-4 flex items-center gap-4 justify-between">
                     <div className="flex flex-col gap-1 min-w-0">
