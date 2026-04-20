@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { GetLeaderboardQueryParams } from "@workspace/api-zod";
-import { sessions } from "../lib/session-store";
+import { getAllSessionsIterable } from "../lib/session-store";
 import { mockResults } from "../lib/seed-data";
 
 const router: IRouter = Router();
@@ -46,9 +46,10 @@ router.get("/leaderboard", async (req, res): Promise<void> => {
     isCurrentUser: boolean;
   }
 
+  const allSessions = await getAllSessionsIterable();
   const allEntries: Omit<RankedEntry, "rank" | "isCurrentUser">[] = [];
 
-  for (const session of sessions.values()) {
+  for (const session of allSessions) {
     const { answeredCount, predictionAccuracy } = computeStats(session.responses);
     if (answeredCount === 0) continue;
     allEntries.push({

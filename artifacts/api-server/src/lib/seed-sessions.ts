@@ -1,4 +1,5 @@
-import { sessions } from "./session-store";
+import { db, sessionsTable, sessionResponsesTable } from "@workspace/db";
+import { sql } from "drizzle-orm";
 import { questions } from "./seed-data";
 
 function makePrng(seed: number) {
@@ -85,10 +86,18 @@ const activeQuestions = questions.filter((q) => q.status === "active");
 const SEED_EPOCH = new Date("2026-01-01T00:00:00.000Z").getTime();
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
-export function seedSessions(): void {
-  const rng = makePrng(0xdeadbeef);
+export async function seedSessions(): Promise<void> {
+  const existing = await db.execute(sql`SELECT COUNT(*)::int AS count FROM sessions WHERE session_id LIKE 'seed_%'`);
+  const existingCount = Number((existing.rows[0] as { count: number }).count);
+  if (existingCount >= 300) {
+    return;
+  }
 
+  const rng = makePrng(0xdeadbeef);
   const usedNicknames = new Set<string>();
+
+  const sessionRows: (typeof sessionsTable.$inferInsert)[] = [];
+  const responseRows: (typeof sessionResponsesTable.$inferInsert)[] = [];
 
   for (let i = 0; i < 300; i++) {
     const sessionIdx = i + 1;
@@ -112,29 +121,31 @@ export function seedSessions(): void {
     const shuffled = fisherYatesShuffle(rng, activeQuestions);
     const chosen = shuffled.slice(0, Math.min(questionCount, activeQuestions.length));
 
-    const responses = chosen.map((q, qIdx) => {
+    sessionRows.push({ sessionId, nickname, ageRange, gender, region, relationshipStatus });
+
+    for (let qIdx = 0; qIdx < chosen.length; qIdx++) {
+      const q = chosen[qIdx];
       const majorityIdx = MAJORITY_INDICES[q.id] ?? 0;
       const answerIdx = pickIndex(rng, makeAnswerWeights(q.options, majorityIdx));
       const predictionIdx = pickIndex(rng, makePredictionWeights(q.options, majorityIdx));
       const offsetMs = Math.floor(rng() * THIRTY_DAYS_MS);
-      return {
+
+      responseRows.push({
         id: `seed_${String(sessionIdx).padStart(3, "0")}_${q.id}_${qIdx}`,
         sessionId,
         questionId: q.id,
         answer: q.options[answerIdx],
         predictedMajority: q.options[predictionIdx],
         createdAt: new Date(SEED_EPOCH + offsetMs).toISOString(),
-      };
-    });
+      });
+    }
+  }
 
-    sessions.set(sessionId, {
-      sessionId,
-      nickname,
-      ageRange,
-      gender,
-      region,
-      relationshipStatus,
-      responses,
-    });
+  const BATCH = 50;
+  for (let i = 0; i < sessionRows.length; i += BATCH) {
+    await db.insert(sessionsTable).values(sessionRows.slice(i, i + BATCH)).onConflictDoNothing();
+  }
+  for (let i = 0; i < responseRows.length; i += BATCH) {
+    await db.insert(sessionResponsesTable).values(responseRows.slice(i, i + BATCH)).onConflictDoNothing();
   }
 }

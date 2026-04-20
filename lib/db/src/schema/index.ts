@@ -1,20 +1,25 @@
-// Export your models here. Add one export per file
-// export * from "./posts";
-//
-// Each model/table should ideally be split into different files.
-// Each model/table should define a Drizzle table, insert schema, and types:
-//
-//   import { pgTable, text, serial } from "drizzle-orm/pg-core";
-//   import { createInsertSchema } from "drizzle-zod";
-//   import { z } from "zod/v4";
-//
-//   export const postsTable = pgTable("posts", {
-//     id: serial("id").primaryKey(),
-//     title: text("title").notNull(),
-//   });
-//
-//   export const insertPostSchema = createInsertSchema(postsTable).omit({ id: true });
-//   export type InsertPost = z.infer<typeof insertPostSchema>;
-//   export type Post = typeof postsTable.$inferSelect;
+import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
-export {}
+export const sessionsTable = pgTable("sessions", {
+  sessionId: text("session_id").primaryKey(),
+  nickname: text("nickname"),
+  ageRange: text("age_range"),
+  gender: text("gender"),
+  region: text("region"),
+  relationshipStatus: text("relationship_status"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const sessionResponsesTable = pgTable("session_responses", {
+  id: text("id").primaryKey(),
+  sessionId: text("session_id")
+    .notNull()
+    .references(() => sessionsTable.sessionId, { onDelete: "cascade" }),
+  questionId: text("question_id").notNull(),
+  answer: text("answer").notNull(),
+  predictedMajority: text("predicted_majority").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+export type DbSession = typeof sessionsTable.$inferSelect;
+export type DbSessionResponse = typeof sessionResponsesTable.$inferSelect;

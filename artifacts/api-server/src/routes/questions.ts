@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { questions, mockResults } from "../lib/seed-data";
-import { sessions } from "../lib/session-store";
+import { getAnsweredQuestionIds } from "../lib/session-store";
 import {
   ListQuestionsQueryParams,
   GetQuestionParams,
@@ -32,8 +32,7 @@ router.get("/questions/today", async (req, res): Promise<void> => {
     .sort((a, b) => a.clusterOrder - b.clusterOrder);
 
   if (sessionId) {
-    const session = sessions.get(sessionId);
-    const answeredIds = new Set(session?.responses.map((r) => r.questionId) ?? []);
+    const answeredIds = await getAnsweredQuestionIds(sessionId);
     const firstUnanswered = c1Questions.find((q) => !answeredIds.has(q.id));
     if (firstUnanswered) {
       res.json(firstUnanswered);

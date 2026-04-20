@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { GetProfileQueryParams, UpdateDemographicsBody } from "@workspace/api-zod";
-import { sessions } from "../lib/session-store";
+import { getSession, ensureSession, updateSessionDemographics } from "../lib/session-store";
 import { mockResults, questions } from "../lib/seed-data";
 
 const router: IRouter = Router();
@@ -333,7 +333,8 @@ router.get("/profile", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  res.json(buildProfileResponse(parsed.data.sessionId, sessions.get(parsed.data.sessionId) ?? null));
+  const session = await getSession(parsed.data.sessionId);
+  res.json(buildProfileResponse(parsed.data.sessionId, session));
 });
 
 router.post("/profile", async (req, res): Promise<void> => {
@@ -345,20 +346,30 @@ router.post("/profile", async (req, res): Promise<void> => {
 
   const { sessionId, nickname, ageRange, gender, region, relationshipStatus } = parsed.data;
 
-  if (!sessions.has(sessionId)) {
-    sessions.set(sessionId, { sessionId, nickname: null, ageRange: null, gender: null, region: null, relationshipStatus: null, responses: [] });
-  }
+  await ensureSession(sessionId);
 
-  const session = sessions.get(sessionId)!;
+  const updates: {
+    nickname?: string | null;
+    ageRange?: string | null;
+    gender?: string | null;
+    region?: string | null;
+    relationshipStatus?: string | null;
+  } = {};
+
   if (nickname !== undefined && nickname !== null) {
     const trimmed = nickname.trim().slice(0, 20);
-    if (trimmed.length >= 2) session.nickname = trimmed;
+    if (trimmed.length >= 2) updates.nickname = trimmed;
   }
-  if (ageRange !== undefined) session.ageRange = ageRange ?? null;
-  if (gender !== undefined) session.gender = gender ?? null;
-  if (region !== undefined) session.region = region ?? null;
-  if (relationshipStatus !== undefined) session.relationshipStatus = relationshipStatus ?? null;
+  if (ageRange !== undefined) updates.ageRange = ageRange ?? null;
+  if (gender !== undefined) updates.gender = gender ?? null;
+  if (region !== undefined) updates.region = region ?? null;
+  if (relationshipStatus !== undefined) updates.relationshipStatus = relationshipStatus ?? null;
 
+  if (Object.keys(updates).length > 0) {
+    await updateSessionDemographics(sessionId, updates);
+  }
+
+  const session = await getSession(sessionId);
   res.json(buildProfileResponse(sessionId, session));
 });
 

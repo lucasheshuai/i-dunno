@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { randomUUID } from "crypto";
 import { SubmitResponseBody } from "@workspace/api-zod";
-import { sessions } from "../lib/session-store";
+import { ensureSession, addSessionResponse } from "../lib/session-store";
 import { questions } from "../lib/seed-data";
 
 const router: IRouter = Router();
@@ -31,19 +31,7 @@ router.post("/responses", async (req, res): Promise<void> => {
     return;
   }
 
-  if (!sessions.has(sessionId)) {
-    sessions.set(sessionId, {
-      sessionId,
-      nickname: null,
-      ageRange: null,
-      gender: null,
-      region: null,
-      relationshipStatus: null,
-      responses: [],
-    });
-  }
-
-  const session = sessions.get(sessionId)!;
+  await ensureSession(sessionId);
 
   const response = {
     id: randomUUID(),
@@ -54,7 +42,7 @@ router.post("/responses", async (req, res): Promise<void> => {
     createdAt: new Date().toISOString(),
   };
 
-  session.responses.push(response);
+  await addSessionResponse(response);
 
   res.status(201).json(response);
 });
