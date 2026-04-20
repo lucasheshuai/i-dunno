@@ -83,7 +83,7 @@ export default function ResultsPage() {
     }
   }, [question, id, userAnswer]);
 
-  // Compute next-in-sequence info and persist cursor so home page can resume correctly
+  // Compute next-in-sequence info
   const sequenceResult = useMemo(() => {
     if (!allQuestions || !allClusters || !id) return null;
     const answeredIds = new Set(Object.keys(getAnsweredQuestions()));
@@ -99,13 +99,15 @@ export default function ResultsPage() {
       questionIds: c.questionIds,
       outro: c.outro,
     }));
-    const result = getNextInSequence(id, questionRefs, clusterRefs, answeredIds);
-    // Persist next position so home "Up Next" can resume without recomputing
-    if (result.next) {
-      setFeedCursor(result.next.topicClusterId, result.next.id);
-    }
-    return result;
+    return getNextInSequence(id, questionRefs, clusterRefs, answeredIds);
   }, [allQuestions, allClusters, id]);
+
+  // Persist feed cursor in an effect (not inside useMemo) so home page can resume correctly
+  useEffect(() => {
+    if (sequenceResult?.next) {
+      setFeedCursor(sequenceResult.next.topicClusterId, sequenceResult.next.id);
+    }
+  }, [sequenceResult]);
 
   if (isQLoading || isRLoading) {
     return (
