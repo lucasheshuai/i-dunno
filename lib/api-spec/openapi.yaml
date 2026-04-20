@@ -442,10 +442,30 @@ components:
         badge:
           type: string
           nullable: true
+        profileLabel:
+          type: string
+          nullable: true
+        profileLabelDescription:
+          type: string
+          nullable: true
+        milestonesUnlocked:
+          type: array
+          items:
+            type: string
+        topDisagreementTopic:
+          type: string
+          nullable: true
+        bestReadCategory:
+          type: string
+          nullable: true
+        worstReadCategory:
+          type: string
+          nullable: true
       required:
         - sessionId
         - answeredCount
         - predictionAccuracy
+        - milestonesUnlocked
 
     UpdateDemographicsBody:
       type: object

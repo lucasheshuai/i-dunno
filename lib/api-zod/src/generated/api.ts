@@ -177,6 +177,12 @@ export const GetProfileResponse = zod.object({
   predictionAccuracy: zod.number(),
   favoriteCategory: zod.string().nullish(),
   badge: zod.string().nullish(),
+  profileLabel: zod.string().nullish(),
+  profileLabelDescription: zod.string().nullish(),
+  milestonesUnlocked: zod.array(zod.string()),
+  topDisagreementTopic: zod.string().nullish(),
+  bestReadCategory: zod.string().nullish(),
+  worstReadCategory: zod.string().nullish(),
 });
 
 /**
@@ -202,6 +208,12 @@ export const UpdateDemographicsResponse = zod.object({
   predictionAccuracy: zod.number(),
   favoriteCategory: zod.string().nullish(),
   badge: zod.string().nullish(),
+  profileLabel: zod.string().nullish(),
+  profileLabelDescription: zod.string().nullish(),
+  milestonesUnlocked: zod.array(zod.string()),
+  topDisagreementTopic: zod.string().nullish(),
+  bestReadCategory: zod.string().nullish(),
+  worstReadCategory: zod.string().nullish(),
 });
 
 /**

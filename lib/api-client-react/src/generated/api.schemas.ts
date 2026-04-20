@@ -110,6 +110,12 @@ export interface UserProfile {
   predictionAccuracy: number;
   favoriteCategory?: string | null;
   badge?: string | null;
+  profileLabel?: string | null;
+  profileLabelDescription?: string | null;
+  milestonesUnlocked: string[];
+  topDisagreementTopic?: string | null;
+  bestReadCategory?: string | null;
+  worstReadCategory?: string | null;
 }
 
 export interface UpdateDemographicsBody {
