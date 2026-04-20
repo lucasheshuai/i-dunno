@@ -196,6 +196,23 @@ export interface NextInSequenceResult {
   completedCluster?: ClusterRef;
 }
 
+// Returns the globally next unanswered question across all clusters
+// using the API-provided cluster ordering (clusters array order is canonical)
+export const getNextQuestion = (
+  questions: QuestionRef[],
+  clusters: ClusterRef[],
+  answeredIds: Set<string>
+): QuestionRef | null => {
+  for (const cluster of clusters) {
+    const clusterQuestions = questions
+      .filter(q => q.topicClusterId === cluster.id)
+      .sort((a, b) => a.clusterOrder - b.clusterOrder);
+    const firstUnanswered = clusterQuestions.find(q => !answeredIds.has(q.id));
+    if (firstUnanswered) return firstUnanswered;
+  }
+  return null;
+};
+
 export const getNextInSequence = (
   currentId: string,
   questions: QuestionRef[],
@@ -223,12 +240,11 @@ export const getNextInSequence = (
   // Cluster is complete — find the completed cluster meta
   const completedCluster = clusters.find(c => c.id === currentClusterId);
 
-  // Find first unanswered in the next cluster(s)
-  const sortedClusters = [...clusters].sort((a, b) => a.id.localeCompare(b.id));
-  const currentIdx = sortedClusters.findIndex(c => c.id === currentClusterId);
+  // Use API-provided cluster order (clusters array order is canonical — no sorting by id)
+  const currentIdx = clusters.findIndex(c => c.id === currentClusterId);
 
-  for (let i = currentIdx + 1; i < sortedClusters.length; i++) {
-    const nextCluster = sortedClusters[i];
+  for (let i = currentIdx + 1; i < clusters.length; i++) {
+    const nextCluster = clusters[i];
     const nextClusterQuestions = questions
       .filter(q => q.topicClusterId === nextCluster.id)
       .sort((a, b) => a.clusterOrder - b.clusterOrder);

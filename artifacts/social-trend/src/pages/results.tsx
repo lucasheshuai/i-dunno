@@ -124,18 +124,31 @@ export default function ResultsPage() {
   const answerCount = getAnswerCount();
   const dominantLabel = getDominantProfileLabel();
 
-  const showCrowdShock =
-    question.rewardTags.includes("crowd_shock") && userAnswerPct < 40 && !!userAnswer;
+  // Prediction Score always shows (mandatory). Optional modules are capped at 2
+  // so no result ever shows more than 3 modules total (Prediction + 2 extras).
+  // Priority order: crowd_shock > demographic_split > profile_builder
+  const eligibleOptional: Array<'crowd_shock' | 'demographic_split' | 'profile_builder'> = [];
 
-  const showDemographicSplit =
+  if (question.rewardTags.includes("crowd_shock") && userAnswerPct < 40 && !!userAnswer) {
+    eligibleOptional.push('crowd_shock');
+  }
+  if (
     question.rewardTags.includes("demographic_split") &&
     hasSharedDemographics() &&
-    results.segments &&
-    results.segments.length > 0 &&
-    hasMeaningfulSplit(results.segments, 15);
+    results.segments?.length > 0 &&
+    hasMeaningfulSplit(results.segments, 15)
+  ) {
+    eligibleOptional.push('demographic_split');
+  }
+  if (question.profileSignals.length > 0 && answerCount >= 3) {
+    eligibleOptional.push('profile_builder');
+  }
 
-  const showProfileBuilder =
-    question.profileSignals.length > 0 && answerCount >= 3;
+  // Cap to 2 optional modules (Prediction always shown = 1, so total max = 3)
+  const activeOptional = new Set(eligibleOptional.slice(0, 2));
+  const showCrowdShock = activeOptional.has('crowd_shock');
+  const showDemographicSplit = activeOptional.has('demographic_split');
+  const showProfileBuilder = activeOptional.has('profile_builder');
 
   // ─── Chart data ──────────────────────────────────────────────────────────────
 
