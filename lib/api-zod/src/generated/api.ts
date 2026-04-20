@@ -15,6 +15,18 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
+ * @summary List all topic clusters
+ */
+export const ListClustersResponseItem = zod.object({
+  id: zod.string(),
+  title: zod.string(),
+  intro: zod.string(),
+  outro: zod.string(),
+  questionIds: zod.array(zod.string()),
+});
+export const ListClustersResponse = zod.array(ListClustersResponseItem);
+
+/**
  * @summary List all active questions
  */
 export const ListQuestionsQueryParams = zod.object({
@@ -36,6 +48,12 @@ export const ListQuestionsResponseItem = zod.object({
   options: zod.array(zod.string()),
   status: zod.enum(["active", "draft"]),
   responseCount: zod.number(),
+  topicClusterId: zod.string(),
+  clusterOrder: zod.number(),
+  teaserText: zod.string(),
+  followUpQuestionIds: zod.array(zod.string()),
+  rewardTags: zod.array(zod.string()),
+  profileSignals: zod.array(zod.string()),
 });
 export const ListQuestionsResponse = zod.array(ListQuestionsResponseItem);
 
@@ -57,6 +75,12 @@ export const GetTodayQuestionResponse = zod.object({
   options: zod.array(zod.string()),
   status: zod.enum(["active", "draft"]),
   responseCount: zod.number(),
+  topicClusterId: zod.string(),
+  clusterOrder: zod.number(),
+  teaserText: zod.string(),
+  followUpQuestionIds: zod.array(zod.string()),
+  rewardTags: zod.array(zod.string()),
+  profileSignals: zod.array(zod.string()),
 });
 
 /**
@@ -81,6 +105,12 @@ export const GetQuestionResponse = zod.object({
   options: zod.array(zod.string()),
   status: zod.enum(["active", "draft"]),
   responseCount: zod.number(),
+  topicClusterId: zod.string(),
+  clusterOrder: zod.number(),
+  teaserText: zod.string(),
+  followUpQuestionIds: zod.array(zod.string()),
+  rewardTags: zod.array(zod.string()),
+  profileSignals: zod.array(zod.string()),
 });
 
 /**
@@ -181,23 +211,23 @@ export const GetStatsResponse = zod.object({
 });
 
 /**
- * @summary Get leaderboard
+ * @summary Get leaderboard rankings
  */
 export const GetLeaderboardQueryParams = zod.object({
-  sessionId: zod.string().optional(),
-});
-
-export const LeaderboardEntryItem = zod.object({
-  rank: zod.number(),
-  handle: zod.string(),
-  answeredCount: zod.number(),
-  predictionAccuracy: zod.number(),
-  badge: zod.string(),
-  isCurrentUser: zod.boolean(),
+  sessionId: zod.coerce.string().optional(),
 });
 
 export const GetLeaderboardResponse = zod.object({
-  entries: zod.array(LeaderboardEntryItem),
+  entries: zod.array(
+    zod.object({
+      rank: zod.number(),
+      handle: zod.string(),
+      answeredCount: zod.number(),
+      predictionAccuracy: zod.number(),
+      badge: zod.string(),
+      isCurrentUser: zod.boolean(),
+    }),
+  ),
   currentUserRank: zod.number().nullable(),
   totalParticipants: zod.number(),
 });

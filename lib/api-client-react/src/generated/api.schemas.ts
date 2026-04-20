@@ -13,6 +13,14 @@ export interface ErrorResponse {
   error: string;
 }
 
+export interface TopicCluster {
+  id: string;
+  title: string;
+  intro: string;
+  outro: string;
+  questionIds: string[];
+}
+
 export type QuestionCategory =
   (typeof QuestionCategory)[keyof typeof QuestionCategory];
 
@@ -48,6 +56,12 @@ export interface Question {
   options: string[];
   status: QuestionStatus;
   responseCount: number;
+  topicClusterId: string;
+  clusterOrder: number;
+  teaserText: string;
+  followUpQuestionIds: string[];
+  rewardTags: string[];
+  profileSignals: string[];
 }
 
 export interface DistributionItem {
@@ -87,6 +101,7 @@ export interface UserResponse {
 
 export interface UserProfile {
   sessionId: string;
+  nickname?: string | null;
   ageRange?: string | null;
   gender?: string | null;
   region?: string | null;
@@ -99,10 +114,26 @@ export interface UserProfile {
 
 export interface UpdateDemographicsBody {
   sessionId: string;
+  nickname?: string | null;
   ageRange?: string | null;
   gender?: string | null;
   region?: string | null;
   relationshipStatus?: string | null;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  handle: string;
+  answeredCount: number;
+  predictionAccuracy: number;
+  badge: string;
+  isCurrentUser: boolean;
+}
+
+export interface LeaderboardResponse {
+  entries: LeaderboardEntry[];
+  currentUserRank: number | null;
+  totalParticipants: number;
 }
 
 export interface AppStats {
@@ -118,4 +149,8 @@ export type ListQuestionsParams = {
 
 export type GetProfileParams = {
   sessionId: string;
+};
+
+export type GetLeaderboardParams = {
+  sessionId?: string;
 };

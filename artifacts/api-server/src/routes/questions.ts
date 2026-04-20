@@ -25,8 +25,8 @@ router.get("/questions", async (req, res): Promise<void> => {
 
 router.get("/questions/today", async (_req, res): Promise<void> => {
   const active = questions.filter((q) => q.status === "active");
-  const today = active[new Date().getDay() % active.length];
-  res.json(today);
+  const first = active.find((q) => q.topicClusterId === "c1" && q.clusterOrder === 1) ?? active[0];
+  res.json(first);
 });
 
 router.get("/questions/:id", async (req, res): Promise<void> => {
