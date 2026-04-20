@@ -4,14 +4,15 @@ import { Button } from "@/components/ui/button";
 import { useGetTodayQuestion, getGetTodayQuestionQueryKey, useGetStats, getGetStatsQueryKey, useListQuestions, getListQuestionsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { isQuestionAnswered } from "@/lib/store";
+import { isQuestionAnswered, getSessionId } from "@/lib/store";
 
 export default function Home() {
   const [, setLocation] = useLocation();
+  const sessionId = getSessionId();
 
-  const { data: todayQuestion, isLoading: isQuestionLoading } = useGetTodayQuestion(undefined, {
+  const { data: todayQuestion, isLoading: isQuestionLoading } = useGetTodayQuestion({ sessionId }, {
     query: {
-      queryKey: getGetTodayQuestionQueryKey(),
+      queryKey: getGetTodayQuestionQueryKey({ sessionId }),
     }
   });
 

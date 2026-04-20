@@ -108,7 +108,7 @@ export const clusters: TopicCluster[] = [
 ];
 
 export const questions: Question[] = [
-  // ─── Cluster 1: Dating Standards ────────────────────────────────────────────
+  // ─── Cluster 1: Attraction & Dating Signals ─────────────────────────────────
   {
     id: "q1",
     category: "Dating",
@@ -300,7 +300,7 @@ export const questions: Question[] = [
     profileSignals: ["pragmatic", "romantic"],
   },
 
-  // ─── Cluster 3: Marriage & Status ───────────────────────────────────────────
+  // ─── Cluster 2: Commitment & Marriage ───────────────────────────────────────
   {
     id: "q10",
     category: "Marriage",
@@ -409,7 +409,7 @@ export const questions: Question[] = [
     profileSignals: ["traditionalist", "progressive"],
   },
 
-  // ─── Cluster 4: What Makes Love Last ────────────────────────────────────────
+  // ─── Cluster 2 continued: What Makes Love Last ──────────────────────────────
   {
     id: "q15",
     category: "Marriage",
@@ -496,7 +496,7 @@ export const questions: Question[] = [
     profileSignals: ["traditionalist", "progressive"],
   },
 
-  // ─── Cluster 5: Gender Expectations ─────────────────────────────────────────
+  // ─── Cluster 3: Gender Pressure ─────────────────────────────────────────────
   {
     id: "q19",
     category: "Gender",
@@ -585,7 +585,7 @@ export const questions: Question[] = [
     profileSignals: ["emotionally_aware", "pragmatic"],
   },
 
-  // ─── Cluster 6: Double Standards ─────────────────────────────────────────────
+  // ─── Cluster 3 continued: Double Standards ───────────────────────────────────
   {
     id: "q23",
     category: "Gender",
@@ -696,7 +696,7 @@ export const questions: Question[] = [
     profileSignals: ["traditionalist", "progressive", "emotionally_aware"],
   },
 
-  // ─── Cluster 7: Money in Relationships ──────────────────────────────────────
+  // ─── Cluster 4: Money & Compatibility ───────────────────────────────────────
   {
     id: "q28",
     category: "Money",
@@ -784,7 +784,7 @@ export const questions: Question[] = [
     profileSignals: ["pragmatic", "security_focused"],
   },
 
-  // ─── Cluster 8: Financial Patterns ──────────────────────────────────────────
+  // ─── Cluster 4 continued: Financial Patterns ─────────────────────────────────
   {
     id: "q32",
     category: "Money",
@@ -873,7 +873,7 @@ export const questions: Question[] = [
     profileSignals: ["emotionally_aware", "security_focused"],
   },
 
-  // ─── Cluster 9: Values & Connection ─────────────────────────────────────────
+  // ─── Cluster 5: Values & Connection ─────────────────────────────────────────
   {
     id: "q36",
     category: "Values",
@@ -982,7 +982,7 @@ export const questions: Question[] = [
     profileSignals: ["independent", "pragmatic", "progressive"],
   },
 
-  // ─── Cluster 10: Modern Love & Regret ───────────────────────────────────────
+  // ─── Cluster 6: Modern Love & Regret ────────────────────────────────────────
   {
     id: "q41",
     category: "Values",
@@ -1092,7 +1092,7 @@ export const questions: Question[] = [
     profileSignals: ["pragmatic", "independent", "emotionally_aware"],
   },
 
-  // ─── Cluster 11: Career Tradeoffs ───────────────────────────────────────────
+  // ─── Cluster 7: Career Tradeoffs ────────────────────────────────────────────
   {
     id: "q44",
     category: "Career",
