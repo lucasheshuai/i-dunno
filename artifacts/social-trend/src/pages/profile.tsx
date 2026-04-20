@@ -178,29 +178,47 @@ function CategoryReads({
 function BlindSpot({
   worst,
   topic,
+  mostAlignedDemographic,
 }: {
   worst: string | null | undefined;
   topic: string | null | undefined;
+  mostAlignedDemographic: string | null | undefined;
 }) {
   const subject = worst ?? topic;
-  if (!subject) {
+  const hasContent = subject || mostAlignedDemographic;
+  if (!hasContent) {
     return (
       <p className="text-sm text-muted-foreground">
-        Keep answering to reveal your biggest blind spot.
+        Keep answering to reveal your blind spot and most aligned group.
       </p>
     );
   }
   return (
-    <div className="flex items-center gap-3">
-      <div className="w-9 h-9 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center shrink-0">
-        <AlertCircle className="w-4 h-4 text-red-600" />
-      </div>
-      <div>
-        <p className="font-semibold">{subject}</p>
-        <p className="text-xs text-muted-foreground">
-          Your predictions here tend to miss the crowd most often.
-        </p>
-      </div>
+    <div className="flex flex-col gap-3">
+      {subject && (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center shrink-0">
+            <AlertCircle className="w-4 h-4 text-red-600" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Biggest blind spot</p>
+            <p className="font-semibold text-sm">{subject}</p>
+            <p className="text-xs text-muted-foreground">Your predictions here miss most often.</p>
+          </div>
+        </div>
+      )}
+      {mostAlignedDemographic && (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center shrink-0">
+            <Award className="w-4 h-4 text-purple-600" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Most aligned group</p>
+            <p className="font-semibold text-sm">{mostAlignedDemographic}</p>
+            <p className="text-xs text-muted-foreground">Your answers align most closely with this group.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -380,6 +398,7 @@ export default function Profile() {
                         <BlindSpot
                           worst={profile.worstReadCategory}
                           topic={profile.topDisagreementTopic}
+                          mostAlignedDemographic={profile.mostAlignedDemographic}
                         />
                       )}
                     </div>

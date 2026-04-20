@@ -43,23 +43,16 @@ function computeBadge(answeredCount: number, accuracy: number): string {
   return "Social Realist";
 }
 
+/** Compute profile label from both question signals AND actual answer behavior. */
 function computeProfileLabel(
-  responses: Array<{ questionId: string; predictedMajority: string }>,
+  responses: Array<{ questionId: string; answer: string; predictedMajority: string }>,
   accuracy: number,
   answeredCount: number,
 ): { label: string; description: string } | null {
   if (answeredCount < 5) return null;
 
+  // Crowd reader override: high prediction accuracy means you genuinely "read" the crowd
   if (accuracy >= 0.65) return PROFILE_LABELS.crowd_reader;
-
-  const signalCounts: Record<string, number> = {};
-  for (const r of responses) {
-    const q = questions.find(q => q.id === r.questionId);
-    if (!q) continue;
-    for (const signal of q.profileSignals) {
-      signalCounts[signal] = (signalCounts[signal] || 0) + 1;
-    }
-  }
 
   const scores: Record<string, number> = {
     crowd_reader: 0,
@@ -67,36 +60,74 @@ function computeProfileLabel(
     value_first: 0,
     stability_seeker: 0,
     modern_pragmatist: 0,
-    social_realist: 1, // default baseline
+    social_realist: 1, // baseline so we always have a winner
   };
 
-  for (const [signal, count] of Object.entries(signalCounts)) {
-    switch (signal) {
-      case "romantic":
-        scores.romantic_skeptic += count * 2;
-        break;
-      case "emotionally_aware":
-        scores.value_first += count * 2;
-        break;
-      case "security_focused":
-        scores.stability_seeker += count * 2;
-        scores.social_realist += count;
-        break;
-      case "traditionalist":
-        scores.stability_seeker += count;
-        scores.social_realist += count;
-        break;
-      case "progressive":
-        scores.modern_pragmatist += count;
-        scores.social_realist += count * 0.5;
-        break;
-      case "pragmatic":
-        scores.modern_pragmatist += count * 2;
-        break;
-      case "independent":
-        scores.romantic_skeptic += count;
-        scores.modern_pragmatist += count;
-        break;
+  let conformistCount = 0; // how often user agreed with the majority
+  let contraryCount = 0;   // how often user went against the majority
+
+  for (const r of responses) {
+    const q = questions.find(q => q.id === r.questionId);
+    const result = mockResults.get(r.questionId);
+
+    // Answer-level behavior: whether user chose with or against the crowd
+    if (result) {
+      if (r.answer === result.majorityAnswer) {
+        conformistCount++;
+      } else {
+        contraryCount++;
+      }
+    }
+
+    if (!q) continue;
+
+    // Question-level signal accumulation weighted by answer behavior
+    // Going against the crowd amplifies "non-conformist" signals;
+    // going with the crowd amplifies "conformist" signals
+    const goesAgainst = result ? r.answer !== result.majorityAnswer : false;
+    const answerMultiplier = goesAgainst ? 1.5 : 1.0;
+
+    for (const signal of q.profileSignals) {
+      switch (signal) {
+        case "romantic":
+          // Romantic + contrarian → stronger Romantic Skeptic
+          scores.romantic_skeptic += goesAgainst ? 2.5 : 1.5;
+          break;
+        case "emotionally_aware":
+          scores.value_first += 2 * answerMultiplier;
+          break;
+        case "security_focused":
+          scores.stability_seeker += 2 * (goesAgainst ? 0.8 : 1.2); // conformism fits stability
+          scores.social_realist += 1;
+          break;
+        case "traditionalist":
+          scores.stability_seeker += goesAgainst ? 0.5 : 1.5; // true traditionalist follows norms
+          scores.social_realist += 1;
+          break;
+        case "progressive":
+          scores.modern_pragmatist += 1;
+          scores.social_realist += 0.5;
+          break;
+        case "pragmatic":
+          scores.modern_pragmatist += 2 * answerMultiplier;
+          break;
+        case "independent":
+          scores.romantic_skeptic += goesAgainst ? 2 : 0.5;
+          scores.modern_pragmatist += 1;
+          break;
+      }
+    }
+  }
+
+  // Answer behavior boosts: strong conformism → social realist; strong contrarianism → romantic skeptic
+  const total = conformistCount + contraryCount;
+  if (total > 0) {
+    const contraryRate = contraryCount / total;
+    if (contraryRate >= 0.6) {
+      scores.romantic_skeptic += 3;
+    } else if (contraryRate <= 0.25) {
+      scores.social_realist += 2;
+      scores.modern_pragmatist += 1;
     }
   }
 
@@ -114,6 +145,48 @@ function computeMilestones(answeredCount: number): string[] {
   return unlocked;
 }
 
+/**
+ * Find which demographic group (from segment data) agrees most with the user's answers.
+ * For each question the user answered, we check each result segment's majority answer.
+ * If the segment's majority matches the user's own answer, that group gets a point.
+ * Returns the group name with the highest agreement rate (needs ≥ 3 scored questions).
+ */
+function computeMostAlignedDemographic(
+  responses: Array<{ questionId: string; answer: string }>,
+): string | null {
+  const groupScores: Record<string, number> = {};
+  const groupTotal: Record<string, number> = {};
+
+  for (const r of responses) {
+    const result = mockResults.get(r.questionId);
+    if (!result || !result.segments) continue;
+
+    for (const segment of result.segments) {
+      if (!segment.distribution || segment.distribution.length === 0) continue;
+      // Find majority answer for this segment
+      const majority = segment.distribution.reduce((a, b) =>
+        b.percentage > a.percentage ? b : a,
+      );
+      groupTotal[segment.groupName] = (groupTotal[segment.groupName] || 0) + 1;
+      if (majority.option === r.answer) {
+        groupScores[segment.groupName] = (groupScores[segment.groupName] || 0) + 1;
+      }
+    }
+  }
+
+  // Only report if we have enough data (at least 3 questions scored per group)
+  const eligibleGroups = Object.keys(groupTotal).filter(g => groupTotal[g] >= 3);
+  if (eligibleGroups.length === 0) return null;
+
+  const winner = eligibleGroups.sort((a, b) => {
+    const rateA = (groupScores[a] || 0) / groupTotal[a];
+    const rateB = (groupScores[b] || 0) / groupTotal[b];
+    return rateB - rateA;
+  })[0];
+
+  return winner;
+}
+
 interface ComputedInsights {
   answeredCount: number;
   predictionAccuracy: number;
@@ -124,6 +197,7 @@ interface ComputedInsights {
   topDisagreementTopic: string | null;
   bestReadCategory: string | null;
   worstReadCategory: string | null;
+  mostAlignedDemographic: string | null;
 }
 
 function computeInsights(
@@ -186,6 +260,7 @@ function computeInsights(
     }
   }
 
+  const mostAlignedDemographic = computeMostAlignedDemographic(responses);
   const milestonesUnlocked = computeMilestones(answeredCount);
   const labelResult = computeProfileLabel(responses, predictionAccuracy, answeredCount);
 
@@ -199,6 +274,7 @@ function computeInsights(
     topDisagreementTopic,
     bestReadCategory,
     worstReadCategory,
+    mostAlignedDemographic,
   };
 }
 
@@ -231,12 +307,22 @@ function buildProfileResponse(
       topDisagreementTopic: null,
       bestReadCategory: null,
       worstReadCategory: null,
+      mostAlignedDemographic: null,
     };
   }
 
   const insights = computeInsights(session.responses);
   const badge = computeBadge(insights.answeredCount, insights.predictionAccuracy);
-  return { sessionId, nickname: session.nickname, ageRange: session.ageRange, gender: session.gender, region: session.region, relationshipStatus: session.relationshipStatus, badge, ...insights };
+  return {
+    sessionId,
+    nickname: session.nickname,
+    ageRange: session.ageRange,
+    gender: session.gender,
+    region: session.region,
+    relationshipStatus: session.relationshipStatus,
+    badge,
+    ...insights,
+  };
 }
 
 // ─── Routes ───────────────────────────────────────────────────────────────────

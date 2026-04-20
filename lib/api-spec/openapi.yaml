@@ -461,6 +461,9 @@ components:
         worstReadCategory:
           type: string
           nullable: true
+        mostAlignedDemographic:
+          type: string
+          nullable: true
       required:
         - sessionId
         - answeredCount

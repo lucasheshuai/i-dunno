@@ -116,6 +116,7 @@ export interface UserProfile {
   topDisagreementTopic?: string | null;
   bestReadCategory?: string | null;
   worstReadCategory?: string | null;
+  mostAlignedDemographic?: string | null;
 }
 
 export interface UpdateDemographicsBody {

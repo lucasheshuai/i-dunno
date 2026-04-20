@@ -183,6 +183,7 @@ export const GetProfileResponse = zod.object({
   topDisagreementTopic: zod.string().nullish(),
   bestReadCategory: zod.string().nullish(),
   worstReadCategory: zod.string().nullish(),
+  mostAlignedDemographic: zod.string().nullish(),
 });
 
 /**
@@ -214,6 +215,7 @@ export const UpdateDemographicsResponse = zod.object({
   topDisagreementTopic: zod.string().nullish(),
   bestReadCategory: zod.string().nullish(),
   worstReadCategory: zod.string().nullish(),
+  mostAlignedDemographic: zod.string().nullish(),
 });
 
 /**
