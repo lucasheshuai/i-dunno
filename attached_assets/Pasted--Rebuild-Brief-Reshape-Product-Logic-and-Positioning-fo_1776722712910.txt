@@ -1,0 +1,388 @@
+# Rebuild Brief: Reshape Product Logic and Positioning for the Social Insights App
+
+## Mission
+Reshape the current product from a “question bank / polling app” into a more addictive, insight-driven, feed-like product.
+
+The current issue is:
+Users may enjoy the first 1–2 questions, but they do not feel enough motivation to continue answering many more. The current loop is too repetitive:
+answer -> predict -> results -> next question
+
+This needs to evolve into a product with:
+- stronger curiosity
+- stronger surprise
+- stronger sense of personal progression
+- stronger feeling that each next question may reveal something meaningful
+
+Do NOT treat this as a simple UI polish task.
+This is primarily a product logic and information architecture redesign.
+
+---
+
+# 1. New Product Positioning
+
+## Previous positioning
+A social question / prediction / results app.
+
+## New positioning
+A personalized social insights feed that helps users:
+- discover how people really think
+- find where they differ from the crowd
+- test how well they read society
+- gradually build a profile of their worldview
+
+The product should feel closer to:
+- a social insights feed
+- a “read the crowd” game
+- a reveal-based personality / perspective product
+
+It should feel LESS like:
+- a question bank
+- a survey tool
+- a static polling site
+
+Important:
+Users should not feel they are “answering 50 questions.”
+They should feel they are moving through a stream of socially interesting reveals.
+
+---
+
+# 2. Core Product Problem to Solve
+
+The current product lacks a compelling reason to continue after the first few questions because:
+- the loop becomes predictable too quickly
+- every question feels structurally similar
+- there is no escalating reward
+- there is no larger narrative or profile being built
+- the “next question” does not feel exciting enough
+
+The redesign should solve for:
+1. stronger variable reward
+2. stronger “next reveal” anticipation
+3. stronger accumulation of personal insight
+4. stronger topic continuity
+5. stronger feed logic instead of question-bank logic
+
+---
+
+# 3. Replace “Question Bank” Logic with “Insight Feed” Logic
+
+## Current problem
+Users can sense there is just a list of many questions.
+This creates fatigue and makes the experience feel finite and task-like.
+
+## New direction
+Hide the idea of a “50-question bank.”
+The app should present questions as a curated stream / feed.
+
+## Implementation instruction
+- Remove or reduce any UI that exposes the full question inventory too early.
+- Replace “browse all questions” as the main experience with a feed-based experience.
+- Keep an explore page, but do not make it the core behavior.
+- The core behavior should be: enter the feed -> answer -> get a reveal -> get teased into the next reveal.
+
+Users should feel:
+“what’s the next interesting reveal?”
+not
+“how many questions are left?”
+
+---
+
+# 4. Redesign the Core Loop
+
+## Old loop
+Question -> predict majority -> see chart -> next
+
+## New loop
+Question -> answer -> predict -> receive a variable insight reward -> see personalized interpretation -> see a teased next question -> continue
+
+Each completed step should feel like:
+- surprise
+- interpretation
+- anticipation
+
+## Required loop outcome
+After each answered question, the product must generate at least one of the following:
+- “You were in the minority”
+- “You misread the crowd”
+- “Men and women split strongly here”
+- “Your age group differs from the overall result”
+- “This strengthens your profile as [type]”
+- “This reveals a blind spot in how you read people”
+
+Do NOT let every result screen feel identical.
+
+---
+
+# 5. Introduce Variable Reward Types
+
+Create multiple types of reward cards / result modules so the app does not feel repetitive.
+
+## Build the following reward module types
+
+### A. Crowd Shock
+Examples:
+- You picked the minority view
+- Only 19% agreed with you
+- You were much more traditional than the crowd on this one
+
+### B. Prediction Score
+Examples:
+- You guessed the crowd correctly
+- You misread the crowd by 24 points
+- You tend to overestimate how practical people are
+
+### C. Demographic Split
+Examples:
+- Men and women disagreed sharply on this question
+- Singles and married users saw this differently
+- Your age group was more aligned with you than the full sample
+
+### D. Profile Builder
+Examples:
+- This answer strengthens your “Social Realist” profile
+- You consistently value stability over chemistry
+- You read money-related attitudes well, but struggle with relationship norms
+
+### E. Topic Hook
+Examples:
+- Next: what people actually mean when they say “marrying up”
+- Next: the follow-up question where this topic gets more divided
+- Next: a question people consistently misjudge
+
+## Important implementation rule
+Not every result screen needs every module.
+Choose 1–3 strong modules dynamically so the product feels varied.
+
+---
+
+# 6. Create “Next Reveal” Hooks Instead of Generic “Next Question”
+
+## Current problem
+The CTA to continue is weak because “next question” sounds like more work.
+
+## New direction
+Every result page must tease the next item with a curiosity-based label.
+
+## Replace generic CTAs like:
+- Next question
+- Continue
+
+## With CTAs like:
+- Next: the question men and women disagreed on most
+- Next: a topic people often misread
+- Next: a deeper follow-up on this issue
+- Next: the one question that may change your profile most
+- Next: how people define “settling” differently
+
+## Implementation instruction
+Build a metadata field for each question such as:
+- teaserText
+- followUpQuestionIds
+- topicClusterId
+
+Use these fields to generate continuity.
+
+---
+
+# 7. Organize Questions into Topic Clusters / Journeys
+
+## Current problem
+Questions feel isolated.
+
+## New direction
+Group questions into mini-journeys of 4–6 related questions.
+
+Examples:
+- Dating Standards
+- Marriage & Status
+- Gender Expectations
+- Money in Relationships
+- Career vs Love
+- Modern Relationship Values
+
+## Each cluster should:
+- start with a broad question
+- move into a more specific or revealing follow-up
+- end with a mini-summary or cluster insight
+
+## Example cluster structure
+Topic Cluster: Marriage & Status
+1. In the marriages you’ve seen recently, what pattern feels most common?
+2. What matters most when people judge whether someone “married up”?
+3. Who is more judged for marrying down?
+4. Are women today more willing to marry someone with lower income than before?
+5. What does “a good match” usually mean in modern marriage?
+
+## Implementation instruction
+Add a structure like:
+- topicClusterId
+- clusterOrder
+- clusterTitle
+- clusterIntro
+- clusterOutro
+
+After 4–5 questions in the same cluster, show a “cluster summary” screen.
+
+---
+
+# 8. Add Summary and Accumulation Mechanics
+
+## Core idea
+Users should feel they are building something by answering more questions.
+
+## Build milestone-based unlocks
+
+### After 3 answers
+Unlock:
+- Your first social reading score
+
+### After 5 answers
+Unlock:
+- Your early perspective profile
+
+### After 8 answers
+Unlock:
+- Where you differ most from the crowd
+
+### After 12 answers
+Unlock:
+- Which category you read best
+- Which category you consistently misjudge
+
+### After 15+ answers
+Unlock:
+- Your strongest disagreement topic
+- Your biggest blind spot
+- Your most aligned demographic group
+
+## Important
+Do not make this feel like cheap gamification.
+This is not about points for the sake of points.
+This is about accumulating insight.
+
+---
+
+# 9. Build a Persistent Personal Profile
+
+Create a lightweight but evolving user profile page.
+
+## The profile should show
+- Questions answered
+- Crowd prediction accuracy
+- Top categories answered
+- Perspective labels
+- Biggest disagreement topic
+- Most aligned group
+- Most common answer pattern
+
+## Example profile labels
+- Social Realist
+- Crowd Reader
+- Modern Pragmatist
+- Romantic Skeptic
+- Value-First Thinker
+- Stability Seeker
+
+These can be simple heuristic rules in V1.
+
+## Important
+The profile must evolve visibly as the user answers more.
+It should feel like the app is “learning” the user.
+
+---
+
+# 10. Reduce Friction and Make the Flow Feel More Feed-Like
+
+Borrow the psychology of TikTok / short-form feeds, but do NOT literally turn it into a short video app.
+
+## The product should borrow:
+- low friction
+- “maybe the next one will surprise me” logic
+- fast progression
+- variable reward
+- personalization
+
+## The product should NOT become:
+- random endless question spam
+- low-quality viral bait
+- dark-pattern addiction product
+
+## Implementation instruction
+- Keep one question per screen
+- Make transitions fast and smooth
+- Minimize clicks between answer and reveal
+- Avoid showing large inventories or menus during the main flow
+- Reduce visual clutter between stages
+- Make each completion feel fast and satisfying
+
+---
+
+# 11. Rework the Home Screen
+
+## Current home should no longer feel like a static landing page for a survey product
+
+## New home screen should emphasize:
+- your personal insight progress
+- where you left off
+- a strong “continue your feed” CTA
+- one or two compelling insight teasers
+- your current profile status
+- optionally: a “today’s most divisive topic” card
+
+## Suggested homepage blocks
+1. Main CTA: Continue Your Feed
+2. Current profile snapshot
+3. Your latest reveal / surprise
+4. Featured topic cluster
+5. One high-curiosity entry point
+
+Example CTA labels:
+- Continue your insight feed
+- Pick up where you left off
+- See your next reveal
+- Continue reading the crowd
+
+---
+
+# 12. Rework the Explore Page
+
+The explore page should remain available, but should no longer feel like a giant question bank.
+
+## Instead, redesign explore around:
+- topic clusters
+- trending social tensions
+- “most divisive”
+- “most misread”
+- “best for your profile”
+- “continue this thread”
+
+## Example explore sections
+- Trending Divides
+- Marriage & Status
+- Career vs Relationships
+- Topics You May Care About
+- Questions People Misjudge Most
+
+Avoid showing a plain list of 50 questions.
+
+---
+
+# 13. Update the Data Model
+
+Modify the question data model to support the new product logic.
+
+## Add fields like:
+```ts
+{
+  id: string,
+  category: string,
+  topicClusterId: string,
+  clusterOrder: number,
+  prompt: string,
+  options: string[],
+  teaserText: string,
+  followUpQuestionIds: string[],
+  rewardTags: string[],
+  profileSignals: string[],
+  status: 'active' | 'draft'
+}
