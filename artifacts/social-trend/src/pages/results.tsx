@@ -33,6 +33,7 @@ import {
   recordProfileSignals,
   getAnsweredQuestions,
   getNextInSequence,
+  setFeedCursor,
   type QuestionRef,
   type ClusterRef,
 } from "@/lib/store";
@@ -82,7 +83,7 @@ export default function ResultsPage() {
     }
   }, [question, id, userAnswer]);
 
-  // Compute next-in-sequence info
+  // Compute next-in-sequence info and persist cursor so home page can resume correctly
   const sequenceResult = useMemo(() => {
     if (!allQuestions || !allClusters || !id) return null;
     const answeredIds = new Set(Object.keys(getAnsweredQuestions()));
@@ -98,7 +99,12 @@ export default function ResultsPage() {
       questionIds: c.questionIds,
       outro: c.outro,
     }));
-    return getNextInSequence(id, questionRefs, clusterRefs, answeredIds);
+    const result = getNextInSequence(id, questionRefs, clusterRefs, answeredIds);
+    // Persist next position so home "Up Next" can resume without recomputing
+    if (result.next) {
+      setFeedCursor(result.next.topicClusterId, result.next.id);
+    }
+    return result;
   }, [allQuestions, allClusters, id]);
 
   if (isQLoading || isRLoading) {
@@ -124,9 +130,10 @@ export default function ResultsPage() {
   const answerCount = getAnswerCount();
   const dominantLabel = getDominantProfileLabel();
 
-  // Prediction Score always shows (mandatory). Optional modules are capped at 2
-  // so no result ever shows more than 3 modules total (Prediction + 2 extras).
-  // Priority order: crowd_shock > demographic_split > profile_builder
+  // Prediction Score always shows (mandatory, 1 of max 3 total).
+  // Build eligible optional modules, then randomize their order so that
+  // different questions show different combinations — no two results feel identical.
+  // Cap at 2 optional so total never exceeds 3 modules.
   const eligibleOptional: Array<'crowd_shock' | 'demographic_split' | 'profile_builder'> = [];
 
   if (question.rewardTags.includes("crowd_shock") && userAnswerPct < 40 && !!userAnswer) {
@@ -135,8 +142,8 @@ export default function ResultsPage() {
   if (
     question.rewardTags.includes("demographic_split") &&
     hasSharedDemographics() &&
-    results.segments?.length > 0 &&
-    hasMeaningfulSplit(results.segments, 15)
+    (results.segments?.length ?? 0) > 0 &&
+    hasMeaningfulSplit(results.segments ?? [], 15)
   ) {
     eligibleOptional.push('demographic_split');
   }
@@ -144,8 +151,13 @@ export default function ResultsPage() {
     eligibleOptional.push('profile_builder');
   }
 
-  // Cap to 2 optional modules (Prediction always shown = 1, so total max = 3)
-  const activeOptional = new Set(eligibleOptional.slice(0, 2));
+  // Shuffle eligible list using question ID as a stable seed so the set is
+  // consistent within a session but varies across questions
+  const seed = id ? id.charCodeAt(id.length - 1) : 0;
+  const shuffled = [...eligibleOptional].sort(
+    (a, b) => ((a.charCodeAt(0) + seed) % 7) - ((b.charCodeAt(0) + seed) % 7)
+  );
+  const activeOptional = new Set(shuffled.slice(0, 2));
   const showCrowdShock = activeOptional.has('crowd_shock');
   const showDemographicSplit = activeOptional.has('demographic_split');
   const showProfileBuilder = activeOptional.has('profile_builder');

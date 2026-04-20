@@ -120,28 +120,55 @@ interface DemographicSplitProps {
   segments: SegmentResult[];
 }
 
-function getSharpestSplit(segments: SegmentResult[]): { segment: SegmentResult; spread: number } | null {
-  let sharpest: { segment: SegmentResult; spread: number } | null = null;
+interface InterGroupSplit {
+  segmentAName: string;
+  segmentBName: string;
+  option: string;
+  pctA: number;
+  pctB: number;
+  spread: number;
+}
 
-  for (const segment of segments) {
-    if (segment.distribution.length < 2) continue;
-    const sorted = [...segment.distribution].sort((a, b) => b.percentage - a.percentage);
-    const spread = sorted[0].percentage - sorted[1].percentage;
-    if (!sharpest || spread > sharpest.spread) {
-      sharpest = { segment, spread };
+// Finds the sharpest inter-group divergence: same option chosen at very different
+// rates by two different segments (e.g. men vs women both seeing option "Both",
+// but one picks it 70% vs the other 30%)
+function getInterGroupSplit(segments: SegmentResult[]): InterGroupSplit | null {
+  let sharpest: InterGroupSplit | null = null;
+
+  for (let i = 0; i < segments.length; i++) {
+    for (let j = i + 1; j < segments.length; j++) {
+      const a = segments[i];
+      const b = segments[j];
+      for (const distA of a.distribution) {
+        const distB = b.distribution.find(d => d.option === distA.option);
+        if (!distB) continue;
+        const spread = Math.abs(distA.percentage - distB.percentage);
+        if (!sharpest || spread > sharpest.spread) {
+          sharpest = {
+            segmentAName: a.groupName,
+            segmentBName: b.groupName,
+            option: distA.option,
+            pctA: distA.percentage,
+            pctB: distB.percentage,
+            spread,
+          };
+        }
+      }
     }
   }
   return sharpest;
 }
 
 export function DemographicSplitModule({ segments }: DemographicSplitProps) {
-  const sharpest = getSharpestSplit(segments);
-  if (!sharpest) return null;
+  const split = getInterGroupSplit(segments);
+  if (!split) return null;
 
-  const { segment } = sharpest;
-  const sorted = [...segment.distribution].sort((a, b) => b.percentage - a.percentage);
-  const top = sorted[0];
-  const second = sorted[1];
+  const higher = split.pctA >= split.pctB
+    ? { name: split.segmentAName, pct: split.pctA }
+    : { name: split.segmentBName, pct: split.pctB };
+  const lower = split.pctA >= split.pctB
+    ? { name: split.segmentBName, pct: split.pctB }
+    : { name: split.segmentAName, pct: split.pctA };
 
   return (
     <motion.div
@@ -153,25 +180,26 @@ export function DemographicSplitModule({ segments }: DemographicSplitProps) {
         <CardContent className="p-5 flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-blue-600 shrink-0" />
-            <span className="font-bold text-base">Groups split on this one</span>
+            <span className="font-bold text-base">Groups disagree here</span>
           </div>
-          <p className="text-sm text-muted-foreground">
-            <strong className="text-foreground">{segment.groupName}</strong> diverged sharply:
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            For <strong className="text-foreground">"{split.option}"</strong>, groups diverged by{" "}
+            <strong className="text-foreground">{split.spread.toFixed(0)} points</strong>:
           </p>
           <div className="flex flex-col gap-2 mt-1">
-            {[top, second].filter(Boolean).map((d) => (
-              <div key={d.option} className="flex items-center gap-3">
+            {[higher, lower].map((group) => (
+              <div key={group.name} className="flex items-center gap-3">
                 <div className="w-10 text-xs font-bold text-right shrink-0 text-foreground">
-                  {d.percentage.toFixed(0)}%
+                  {group.pct.toFixed(0)}%
                 </div>
                 <div className="flex-1 h-2.5 bg-secondary rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full bg-blue-500/60"
-                    style={{ width: `${d.percentage}%` }}
+                    style={{ width: `${group.pct}%` }}
                   />
                 </div>
-                <div className="w-28 text-xs text-muted-foreground truncate" title={d.option}>
-                  {d.option}
+                <div className="w-28 text-xs text-muted-foreground truncate" title={group.name}>
+                  {group.name}
                 </div>
               </div>
             ))}
@@ -183,8 +211,8 @@ export function DemographicSplitModule({ segments }: DemographicSplitProps) {
 }
 
 export function hasMeaningfulSplit(segments: SegmentResult[], threshold = 20): boolean {
-  const sharpest = getSharpestSplit(segments);
-  return !!sharpest && sharpest.spread >= threshold;
+  const split = getInterGroupSplit(segments);
+  return !!split && split.spread >= threshold;
 }
 
 // ─── Profile Builder Module ───────────────────────────────────────────────────

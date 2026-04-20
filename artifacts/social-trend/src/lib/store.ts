@@ -137,6 +137,30 @@ export const setNickname = (name: string): void => {
   localStorage.setItem('st_nickname', name);
 };
 
+// ─── Feed cursor (persisted position in the cluster-sequential feed) ──────────
+
+export interface FeedCursor {
+  clusterId: string;
+  questionId: string;
+}
+
+export const getFeedCursor = (): FeedCursor | null => {
+  try {
+    const raw = localStorage.getItem('st_feed_cursor');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const setFeedCursor = (clusterId: string, questionId: string): void => {
+  localStorage.setItem('st_feed_cursor', JSON.stringify({ clusterId, questionId }));
+};
+
+export const clearFeedCursor = (): void => {
+  localStorage.removeItem('st_feed_cursor');
+};
+
 // ─── Profile Signal Accumulation ─────────────────────────────────────────────
 
 const SIGNAL_LABELS: Record<string, string> = {

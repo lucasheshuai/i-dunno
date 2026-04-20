@@ -15,6 +15,7 @@ import {
   isQuestionAnswered,
   getAnsweredQuestions,
   getNextQuestion,
+  getFeedCursor,
   type QuestionRef,
   type ClusterRef,
 } from "@/lib/store";
@@ -36,10 +37,28 @@ export default function Home() {
     query: { queryKey: getListClustersQueryKey() },
   });
 
-  // Compute next unanswered question in cluster-sequential order (API cluster order is canonical)
+  // Compute next unanswered question in cluster-sequential order.
+  // Prefer the persisted feed cursor (set by the results page after each answer)
+  // for fast resume, falling back to full recompute from answered state.
   const nextQuestion = useMemo(() => {
     if (!allQuestions || !allClusters) return null;
     const answeredIds = new Set(Object.keys(getAnsweredQuestions()));
+
+    // Try cursor first — it points to the question computed right after the last answer
+    const cursor = getFeedCursor();
+    if (cursor && !answeredIds.has(cursor.questionId)) {
+      const cursorQ = allQuestions.find(q => q.id === cursor.questionId);
+      if (cursorQ) {
+        return {
+          id: cursorQ.id,
+          topicClusterId: cursorQ.topicClusterId,
+          clusterOrder: cursorQ.clusterOrder,
+          teaserText: cursorQ.teaserText,
+        };
+      }
+    }
+
+    // Fall back to full cluster-sequential computation
     const questionRefs: QuestionRef[] = allQuestions.map((q) => ({
       id: q.id,
       topicClusterId: q.topicClusterId,
