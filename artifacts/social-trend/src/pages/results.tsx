@@ -1,7 +1,7 @@
 import { useParams, useLocation, Link } from "wouter";
 import { useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
-  useGetQuestionResults,
   getGetQuestionResultsQueryKey,
   useGetQuestion,
   getGetQuestionQueryKey,
@@ -10,6 +10,7 @@ import {
   useListClusters,
   getListClustersQueryKey,
 } from "@workspace/api-client-react";
+import type { AggregatedResult as BaseAggregatedResult } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +35,7 @@ import {
   getAnsweredQuestions,
   getNextInSequence,
   setFeedCursor,
+  getSessionId,
   type QuestionRef,
   type ClusterRef,
 } from "@/lib/store";
@@ -45,6 +47,12 @@ import {
   TopicHookModule,
   hasMeaningfulSplit,
 } from "@/components/result-modules";
+
+// Server may return majorityAnswer:null when the session hasn't answered yet.
+// In practice the results page always arrives with a valid answered session.
+type AggregatedResult = Omit<BaseAggregatedResult, "majorityAnswer"> & {
+  majorityAnswer: string | null;
+};
 
 // ─── Context label helpers ────────────────────────────────────────────────────
 
@@ -92,8 +100,18 @@ export default function ResultsPage() {
     query: { enabled: !!id, queryKey: getGetQuestionQueryKey(id || "") },
   });
 
-  const { data: results, isLoading: isRLoading } = useGetQuestionResults(id || "", {
-    query: { enabled: !!id && hasOnboarded(), queryKey: getGetQuestionResultsQueryKey(id || "") },
+  // Fetch results with sessionId so the server can verify the caller has already
+  // answered, unlocking the majorityAnswer field (the prediction answer key).
+  const sessionId = getSessionId();
+  const { data: results, isLoading: isRLoading } = useQuery<AggregatedResult>({
+    queryKey: [...getGetQuestionResultsQueryKey(id || ""), sessionId],
+    queryFn: async ({ signal }) => {
+      const url = `/api/questions/${id}/results?sessionId=${encodeURIComponent(sessionId)}`;
+      const res = await fetch(url, { signal });
+      if (!res.ok) throw new Error("Failed to fetch results");
+      return res.json() as Promise<AggregatedResult>;
+    },
+    enabled: !!id && hasOnboarded(),
   });
 
   const { data: allQuestions } = useListQuestions(
@@ -261,7 +279,7 @@ export default function ResultsPage() {
         <PredictionScoreModule
           userAnswer={userAnswer}
           userPrediction={userPrediction}
-          majorityAnswer={results.majorityAnswer}
+          majorityAnswer={results.majorityAnswer ?? ""}
           majorityPct={majorityPct}
           userAnswerPct={userAnswerPct}
         />

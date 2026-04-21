@@ -80,7 +80,22 @@ router.get("/questions/:id/results", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json(result);
+  // Only reveal majorityAnswer (the prediction answer key) after the caller has
+  // committed their own answer. This prevents scripted requests from reading the
+  // answer key before submitting, which would trivially game prediction scoring.
+  const sessionId = typeof req.query.sessionId === "string" ? req.query.sessionId.trim() : null;
+  if (sessionId) {
+    const answeredIds = await getAnsweredQuestionIds(sessionId);
+    if (answeredIds.has(params.data.id)) {
+      res.json(result);
+      return;
+    }
+  }
+
+  // Session hasn't answered yet (or no sessionId supplied): return distribution
+  // and segment data for preview purposes but strip the majority answer key.
+  const { majorityAnswer: _redacted, ...safeResult } = result;
+  res.json({ ...safeResult, majorityAnswer: null });
 });
 
 export default router;
