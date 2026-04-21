@@ -175,7 +175,7 @@ export default function ResultsPage() {
   const nextQuestion = sequenceResult?.next;
   const clusterComplete = sequenceResult?.clusterComplete ?? false;
   const completedCluster = sequenceResult?.completedCluster;
-  const nextTeaserText = nextQuestion?.teaserText || "Next question";
+  const nextTeaserText = question?.teaserText || "Next question";
 
   // Derive context labels for the next question
   const nextRewardTags = nextQuestion

@@ -143,7 +143,7 @@ export default function Home() {
                   {answerCount > 0 ? "Pick up where you left off" : "Start your insight feed"}
                 </span>
                 <span className="text-sm opacity-75 mt-0.5 line-clamp-1">
-                  {nextQuestion.teaserText || nextQuestion.prompt}
+                  {nextQuestion.prompt}
                 </span>
               </div>
               <ChevronRight className="w-6 h-6 shrink-0 opacity-80" />
