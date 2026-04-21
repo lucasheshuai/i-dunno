@@ -351,7 +351,7 @@ export default function ResultsPage() {
         {nextQuestion ? (
           <Button
             size="lg"
-            className="h-auto min-h-14 px-6 rounded-xl text-left flex-col items-start gap-1 w-full max-w-md"
+            className="h-auto min-h-14 px-6 rounded-xl text-left flex-col items-start gap-1 w-full max-w-md whitespace-normal"
             onClick={() => setLocation(`/question/${nextQuestion.id}`)}
           >
             <span className="text-xs font-normal opacity-70 uppercase tracking-wide">
