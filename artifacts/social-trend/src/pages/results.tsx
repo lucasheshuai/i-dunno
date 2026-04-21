@@ -179,15 +179,18 @@ export default function ResultsPage() {
     ? allClusters?.find(c => c.id === nextQuestion.topicClusterId)?.title
     : undefined;
 
+  // Explicit cluster-change detection: next question belongs to a different cluster
+  const isMovingToNewCluster = !!nextQuestion && nextQuestion.topicClusterId !== question.topicClusterId;
+
   const nextRevealCardLabel = getNextQuestionContextLabel(
     nextRewardTags,
-    clusterComplete,
+    isMovingToNewCluster,
     nextClusterTitle,
     nextProfileSignals.length > 0
   );
   const nextCTALabel = getNextCTAContextLabel(
     nextRewardTags,
-    clusterComplete,
+    isMovingToNewCluster,
     nextClusterTitle,
     nextProfileSignals.length > 0
   );

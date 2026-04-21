@@ -101,15 +101,16 @@ export default function Explore() {
         .map(([s]) => s)
     );
 
+    // Only personalize once the user has built some profile signals
+    if (!hasSignals) return [];
+
     return allQuestions
       .filter(q => !isQuestionAnswered(q.id) && q.profileSignals.length > 0)
       .map(q => {
-        // Score: prioritize questions that add NEW signal dimensions
+        // Prioritize questions that add NEW signal dimensions not yet in the user's profile
         const newSignals = q.profileSignals.filter(s => !dominantSignals.has(s)).length;
         const existingSignals = q.profileSignals.filter(s => dominantSignals.has(s)).length;
-        const score = hasSignals
-          ? newSignals * 2 + existingSignals           // new dims weighted higher
-          : q.profileSignals.length;                   // no profile yet: richest wins
+        const score = newSignals * 2 + existingSignals;
         return { q, score };
       })
       .filter(({ score }) => score > 0)
