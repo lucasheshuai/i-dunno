@@ -1,0 +1,104 @@
+Add user profile tracking fields like:
+{
+  id: string,
+  answeredQuestionIds: string[],
+  predictionAccuracy: number,
+  categoryScores: Record<string, number>,
+  profileLabels: string[],
+  blindSpots: string[],
+  strongestDisagreementTopic?: string,
+  alignedGroups: string[]
+}
+14. Seed Content Restructuring
+
+Do not leave the original 50 questions as a flat list.
+
+Reorganize them into clusters
+
+Example:
+
+Dating Signals
+Marriage Matching
+Gender Pressure
+Money & Compatibility
+Modern Values
+Career Tradeoffs
+
+Each cluster should contain 4–6 questions.
+
+Also write:
+a short cluster intro
+a short cluster summary
+teaser copy between questions
+
+The content should feel authored and intentional, not dumped into a database.
+
+15. Introduce “Session Design”
+
+A user session should feel satisfying even if short.
+
+Design target
+
+A strong session = 3–5 answered questions
+
+In one session, the user should ideally experience:
+one surprising crowd result
+one clear demographic split
+one profile-building moment
+one compelling teaser into the next cluster or next question
+
+This means the order of questions matters.
+Do NOT just randomize everything.
+
+16. Priority Order for Implementation
+Phase 1: Product logic restructuring
+Hide flat question-bank logic
+Create topic clusters
+Add teaser-based next-step system
+Add variable reward/result modules
+Add evolving profile page
+Phase 2: Flow redesign
+Rework home page around continuity and profile
+Rework result page around reveals
+Rework explore page around clusters and tensions
+Improve transitions and reduce friction
+Phase 3: Retention enhancements
+Add milestone unlocks
+Add shareable insight cards
+Add “resume where you left off”
+Optionally add a light daily cadence later
+
+Important:
+Do NOT prioritize streaks or artificial gamification before the core reveal system works.
+
+17. Design Principles
+
+Please follow these design principles:
+
+Every screen should answer: why should I care?
+Every completed question should produce a meaningful reveal
+The next step should feel more like curiosity than effort
+The app should feel like an insight product, not a polling form
+Repetition must be reduced through content structure and reward variation
+The user should feel the product is gradually understanding them
+18. Deliverables
+
+Please implement the following deliverables:
+
+A reworked homepage with “continue your feed” logic
+A feed-based question flow rather than a flat question list
+Topic clusters with continuity between questions
+Result screens with variable reward modules
+Teased “next reveal” CTAs
+A persistent evolving profile page
+A more curated explore page
+Basic milestone unlock logic
+Updated mock data to support all of the above
+
+The final result should feel:
+
+more dynamic
+more personalized
+more curiosity-driven
+less like a survey
+more like a social insight engine people want to keep exploring
