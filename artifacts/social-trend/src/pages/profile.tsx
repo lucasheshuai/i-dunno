@@ -5,7 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Award, Target, Hash, Compass, Lock, Star, TrendingUp, TrendingDown, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react";
+import { Award, Target, Hash, Compass, Lock, Star, TrendingUp, TrendingDown, AlertCircle, CheckCircle2, RotateCcw, Zap, EyeOff, ArrowRight, Users } from "lucide-react";
+import { getArchetypeContent, resolvePopulationContext } from "@/lib/archetypes";
 
 // ─── Milestone config ─────────────────────────────────────────────────────────
 
@@ -102,14 +103,95 @@ function PerspectiveProfile({
   if (!label) {
     return <p className="text-sm text-muted-foreground">Keep answering to shape your profile.</p>;
   }
+
+  const content = getArchetypeContent(label);
+
+  if (!content) {
+    return (
+      <div className="flex flex-col gap-2">
+        <span className="inline-flex self-start px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 font-semibold text-sm">
+          {label}
+        </span>
+        {description && (
+          <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+        )}
+      </div>
+    );
+  }
+
+  const populationContext = resolvePopulationContext(content);
+
   return (
-    <div className="flex flex-col gap-2">
-      <span className="inline-flex self-start px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 font-semibold text-sm">
-        {label}
-      </span>
-      {description && (
-        <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
-      )}
+    <div className="flex flex-col gap-7">
+      <p className="text-base italic text-foreground/80 leading-relaxed">
+        {content.shortTagline}
+      </p>
+
+      <div className="flex items-start gap-2 text-sm text-muted-foreground">
+        <Users className="w-4 h-4 mt-0.5 shrink-0" />
+        <span className="leading-relaxed">{populationContext}</span>
+      </div>
+
+      <p className="text-sm text-foreground/80 leading-relaxed">
+        {content.plainEnglishMeaning}
+      </p>
+
+      <div className="flex flex-col gap-3">
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          How you likely got here
+        </h4>
+        <ul className="flex flex-col gap-2">
+          {content.howYouLikelyGotHere.map((item, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm text-foreground/75">
+              <ArrowRight className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground" />
+              <span className="leading-relaxed">{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Strengths
+        </h4>
+        <ul className="flex flex-col gap-2">
+          {content.strengths.map((item, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm text-foreground/75">
+              <Zap className="w-3.5 h-3.5 mt-0.5 shrink-0 text-purple-500" />
+              <span className="leading-relaxed">{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Blind spots
+        </h4>
+        <ul className="flex flex-col gap-2">
+          {content.blindSpots.map((item, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm text-foreground/75">
+              <EyeOff className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground" />
+              <span className="leading-relaxed">{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Why this matters
+        </h4>
+        <p className="text-sm text-foreground/75 leading-relaxed">
+          {content.whyThisMatters}
+        </p>
+      </div>
+
+      <div className="border-l-2 border-purple-300 dark:border-purple-700 pl-4">
+        <p className="text-sm italic text-foreground/60 leading-relaxed">
+          {content.reflectionPrompt}
+        </p>
+      </div>
     </div>
   );
 }
