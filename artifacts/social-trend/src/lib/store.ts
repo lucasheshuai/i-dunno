@@ -57,6 +57,14 @@ export const markQuestionAnswered = (id: string) => {
   localStorage.setItem('st_answered', JSON.stringify(answered));
 };
 
+export const syncAnsweredFromServer = (ids: string[]) => {
+  const serverSet: Record<string, boolean> = {};
+  for (const id of ids) {
+    serverSet[id] = true;
+  }
+  localStorage.setItem('st_answered', JSON.stringify(serverSet));
+};
+
 export const isQuestionAnswered = (id: string) => {
   return !!getAnsweredQuestions()[id];
 };

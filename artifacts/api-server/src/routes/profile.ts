@@ -298,6 +298,7 @@ function buildProfileResponse(
       region: null,
       relationshipStatus: null,
       answeredCount: 0,
+      answeredQuestionIds: [] as string[],
       predictionAccuracy: 0,
       favoriteCategory: null,
       badge: "Social Realist",
@@ -313,6 +314,7 @@ function buildProfileResponse(
 
   const insights = computeInsights(session.responses);
   const badge = computeBadge(insights.answeredCount, insights.predictionAccuracy);
+  const answeredQuestionIds = session.responses.map(r => r.questionId);
   return {
     sessionId,
     nickname: session.nickname,
@@ -321,6 +323,7 @@ function buildProfileResponse(
     region: session.region,
     relationshipStatus: session.relationshipStatus,
     badge,
+    answeredQuestionIds,
     ...insights,
   };
 }

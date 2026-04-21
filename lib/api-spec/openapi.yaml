@@ -434,6 +434,10 @@ components:
           nullable: true
         answeredCount:
           type: integer
+        answeredQuestionIds:
+          type: array
+          items:
+            type: string
         predictionAccuracy:
           type: number
         favoriteCategory:
@@ -467,6 +471,7 @@ components:
       required:
         - sessionId
         - answeredCount
+        - answeredQuestionIds
         - predictionAccuracy
         - milestonesUnlocked
 

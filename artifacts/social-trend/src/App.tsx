@@ -4,6 +4,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout";
 import NotFound from "@/pages/not-found";
+import { useEffect } from "react";
+import { useGetProfile } from "@workspace/api-client-react";
+import { getSessionId, syncAnsweredFromServer } from "@/lib/store";
 
 import Home from "@/pages/home";
 import QuestionPage from "@/pages/question";
@@ -15,6 +18,19 @@ import Profile from "@/pages/profile";
 import Leaderboard from "@/pages/leaderboard";
 
 const queryClient = new QueryClient();
+
+function SessionSync() {
+  const sessionId = getSessionId();
+  const { data: profile } = useGetProfile({ sessionId });
+
+  useEffect(() => {
+    if (profile?.answeredQuestionIds !== undefined) {
+      syncAnsweredFromServer(profile.answeredQuestionIds);
+    }
+  }, [profile?.answeredQuestionIds]);
+
+  return null;
+}
 
 function Router() {
   return (
@@ -39,6 +55,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <SessionSync />
           <Router />
         </WouterRouter>
         <Toaster />

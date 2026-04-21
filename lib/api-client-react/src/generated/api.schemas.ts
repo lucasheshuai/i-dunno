@@ -107,6 +107,7 @@ export interface UserProfile {
   region?: string | null;
   relationshipStatus?: string | null;
   answeredCount: number;
+  answeredQuestionIds: string[];
   predictionAccuracy: number;
   favoriteCategory?: string | null;
   badge?: string | null;
