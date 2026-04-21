@@ -42,8 +42,37 @@ import {
   CrowdShockModule,
   DemographicSplitModule,
   ProfileBuilderModule,
+  TopicHookModule,
   hasMeaningfulSplit,
 } from "@/components/result-modules";
+
+// ─── Context label helpers ────────────────────────────────────────────────────
+
+function getNextQuestionContextLabel(
+  rewardTags: string[],
+  isNewCluster: boolean,
+  clusterTitle?: string,
+  hasProfileSignals?: boolean
+): string {
+  if (isNewCluster && clusterTitle) return `Next topic: ${clusterTitle}`;
+  if (rewardTags.includes("demographic_split")) return "Next: groups disagree sharply here";
+  if (rewardTags.includes("crowd_shock")) return "Next: a question most people get wrong";
+  if (hasProfileSignals) return "Next: a question that reveals your worldview";
+  return "Next reveal";
+}
+
+function getNextCTAContextLabel(
+  rewardTags: string[],
+  isNewCluster: boolean,
+  clusterTitle?: string,
+  hasProfileSignals?: boolean
+): string {
+  if (isNewCluster && clusterTitle) return `New topic: ${clusterTitle}`;
+  if (rewardTags.includes("demographic_split")) return "Groups split on this one";
+  if (rewardTags.includes("crowd_shock")) return "Most people get this wrong";
+  if (hasProfileSignals) return "Reveals your worldview";
+  return "Up next";
+}
 
 export default function ResultsPage() {
   const { id } = useParams();
@@ -132,11 +161,42 @@ export default function ResultsPage() {
   const answerCount = getAnswerCount();
   const dominantLabel = getDominantProfileLabel();
 
+  // ─── Next question info (needed for module selection below) ──────────────────
+
+  const nextQuestion = sequenceResult?.next;
+  const clusterComplete = sequenceResult?.clusterComplete ?? false;
+  const completedCluster = sequenceResult?.completedCluster;
+  const nextTeaserText = nextQuestion?.teaserText || "Next question";
+
+  // Derive context labels for the next question
+  const nextRewardTags = nextQuestion
+    ? (allQuestions?.find(q => q.id === nextQuestion.id)?.rewardTags ?? [])
+    : [];
+  const nextProfileSignals = nextQuestion
+    ? (allQuestions?.find(q => q.id === nextQuestion.id)?.profileSignals ?? [])
+    : [];
+  const nextClusterTitle = nextQuestion
+    ? allClusters?.find(c => c.id === nextQuestion.topicClusterId)?.title
+    : undefined;
+
+  const nextRevealCardLabel = getNextQuestionContextLabel(
+    nextRewardTags,
+    clusterComplete,
+    nextClusterTitle,
+    nextProfileSignals.length > 0
+  );
+  const nextCTALabel = getNextCTAContextLabel(
+    nextRewardTags,
+    clusterComplete,
+    nextClusterTitle,
+    nextProfileSignals.length > 0
+  );
+
   // Prediction Score always shows (mandatory, 1 of max 3 total).
   // Build eligible optional modules, then randomize their order so that
   // different questions show different combinations — no two results feel identical.
   // Cap at 2 optional so total never exceeds 3 modules.
-  const eligibleOptional: Array<'crowd_shock' | 'demographic_split' | 'profile_builder'> = [];
+  const eligibleOptional: Array<'crowd_shock' | 'demographic_split' | 'profile_builder' | 'topic_hook'> = [];
 
   if (question.rewardTags.includes("crowd_shock") && userAnswerPct < 40 && !!userAnswer) {
     eligibleOptional.push('crowd_shock');
@@ -152,6 +212,9 @@ export default function ResultsPage() {
   if (question.profileSignals.length > 0 && answerCount >= 3) {
     eligibleOptional.push('profile_builder');
   }
+  if (nextQuestion) {
+    eligibleOptional.push('topic_hook');
+  }
 
   // Shuffle eligible list using question ID as a stable seed so the set is
   // consistent within a session but varies across questions
@@ -163,19 +226,13 @@ export default function ResultsPage() {
   const showCrowdShock = activeOptional.has('crowd_shock');
   const showDemographicSplit = activeOptional.has('demographic_split');
   const showProfileBuilder = activeOptional.has('profile_builder');
+  const showTopicHook = activeOptional.has('topic_hook');
 
   // ─── Chart data ──────────────────────────────────────────────────────────────
 
   const chartData = results.distribution
     .map((d) => ({ name: d.option, value: d.percentage, count: d.count }))
     .sort((a, b) => b.value - a.value);
-
-  // ─── Next question info ──────────────────────────────────────────────────────
-
-  const nextQuestion = sequenceResult?.next;
-  const clusterComplete = sequenceResult?.clusterComplete ?? false;
-  const completedCluster = sequenceResult?.completedCluster;
-  const nextTeaserText = nextQuestion?.teaserText || "Next question";
 
   return (
     <motion.div
@@ -220,6 +277,13 @@ export default function ResultsPage() {
           profileSignals={question.profileSignals}
           dominantLabel={dominantLabel}
           answerCount={answerCount}
+        />
+      )}
+
+      {showTopicHook && nextQuestion && (
+        <TopicHookModule
+          nextTeaserText={nextTeaserText}
+          contextLabel={nextRevealCardLabel}
         />
       )}
 
@@ -355,9 +419,7 @@ export default function ResultsPage() {
             onClick={() => setLocation(`/question/${nextQuestion.id}`)}
           >
             <span className="text-xs font-normal opacity-70 uppercase tracking-wide">
-              {clusterComplete && completedCluster
-                ? `Next: ${allClusters?.find((c) => c.id === nextQuestion.topicClusterId)?.title ?? "Next cluster"}`
-                : "Up next"}
+              {nextCTALabel}
             </span>
             <span className="flex items-start gap-2 font-semibold text-base leading-snug w-full">
               <span className="flex-1 min-w-0 break-words">{nextTeaserText}</span>

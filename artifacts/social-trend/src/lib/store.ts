@@ -201,6 +201,15 @@ export const recordProfileSignals = (questionId: string, signals: string[]) => {
   localStorage.setItem('st_profile_signals', JSON.stringify(stored));
 };
 
+export const getProfileSignalCounts = (): Record<string, number> => {
+  const stored = getStoredProfileSignals();
+  const counts: Record<string, number> = {};
+  Object.values(stored).flat().forEach(s => {
+    counts[s] = (counts[s] || 0) + 1;
+  });
+  return counts;
+};
+
 export const getDominantProfileLabel = (): string | null => {
   const stored = getStoredProfileSignals();
   const counts: Record<string, number> = {};

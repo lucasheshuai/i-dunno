@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, XCircle, Zap, Users, Sparkles, TrendingUp } from "lucide-react";
+import { CheckCircle2, XCircle, Zap, Users, Sparkles, TrendingUp, Eye } from "lucide-react";
 
 interface DistributionItem {
   option: string;
@@ -271,6 +271,37 @@ export function ProfileBuilderModule({ profileSignals, dominantLabel, answerCoun
               </span>
             </div>
           )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+// ─── Topic Hook Module ────────────────────────────────────────────────────────
+
+interface TopicHookProps {
+  nextTeaserText: string;
+  contextLabel: string;
+}
+
+export function TopicHookModule({ nextTeaserText, contextLabel }: TopicHookProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4 }}
+    >
+      <Card className="overflow-hidden border-2 border-orange-400/30 bg-orange-50/60 dark:bg-orange-900/10">
+        <CardContent className="p-5 flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <Eye className="w-5 h-5 text-orange-500 shrink-0" />
+            <span className="text-xs font-semibold uppercase tracking-wide text-orange-600 dark:text-orange-400">
+              {contextLabel}
+            </span>
+          </div>
+          <p className="text-sm font-medium leading-snug text-foreground">
+            {nextTeaserText}
+          </p>
         </CardContent>
       </Card>
     </motion.div>

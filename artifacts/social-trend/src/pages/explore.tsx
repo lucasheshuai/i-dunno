@@ -8,8 +8,8 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import { getAnsweredQuestions, isQuestionAnswered, getRecentResponses } from "@/lib/store";
-import { ChevronRight, TrendingUp, Target, CheckCircle2 } from "lucide-react";
+import { getAnsweredQuestions, isQuestionAnswered, getRecentResponses, getProfileSignalCounts } from "@/lib/store";
+import { ChevronRight, TrendingUp, Target, CheckCircle2, UserCircle2 } from "lucide-react";
 import { useMemo } from "react";
 
 export default function Explore() {
@@ -86,6 +86,37 @@ export default function Explore() {
 
     return scored;
   }, [allQuestions]);
+
+  // Best for Your Profile: surfaces unanswered questions whose profileSignals
+  // extend the user's existing profile into underexplored territory.
+  // If user has no signals yet, shows questions with the richest profileSignals array.
+  const bestForProfile = useMemo(() => {
+    if (!allQuestions) return [];
+    const signalCounts = getProfileSignalCounts();
+    const hasSignals = Object.keys(signalCounts).length > 0;
+    const dominantSignals = new Set(
+      Object.entries(signalCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 2)
+        .map(([s]) => s)
+    );
+
+    return allQuestions
+      .filter(q => !isQuestionAnswered(q.id) && q.profileSignals.length > 0)
+      .map(q => {
+        // Score: prioritize questions that add NEW signal dimensions
+        const newSignals = q.profileSignals.filter(s => !dominantSignals.has(s)).length;
+        const existingSignals = q.profileSignals.filter(s => dominantSignals.has(s)).length;
+        const score = hasSignals
+          ? newSignals * 2 + existingSignals           // new dims weighted higher
+          : q.profileSignals.length;                   // no profile yet: richest wins
+        return { q, score };
+      })
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(({ q }) => q)
+      .slice(0, 4);
+  }, [allQuestions, answeredIds]);
 
   if (isLoading) {
     return (
@@ -293,6 +324,58 @@ export default function Explore() {
                     </div>
                     <div className="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-950 group-hover:bg-amber-500 group-hover:text-white flex items-center justify-center transition-colors shrink-0">
                       <ChevronRight className="w-4 h-4 text-amber-600 group-hover:text-white" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.section>
+      )}
+
+      {/* Best for Your Profile */}
+      {bestForProfile.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.55 }}
+          className="flex flex-col gap-4"
+        >
+          <div className="flex items-center gap-2">
+            <UserCircle2 className="w-4 h-4 text-violet-600" />
+            <h2 className="text-base font-semibold uppercase tracking-wide text-muted-foreground">
+              Best for Your Profile
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground -mt-2">
+            Questions that would add new dimensions to your perspective profile.
+          </p>
+          <div className="flex flex-col gap-3">
+            {bestForProfile.map((q, idx) => (
+              <motion.div
+                key={q.id}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 + idx * 0.05 }}
+              >
+                <Card
+                  className="group cursor-pointer hover:border-violet-400/50 hover:shadow-sm transition-all"
+                  onClick={() => setLocation(`/question/${q.id}`)}
+                >
+                  <CardContent className="p-4 flex items-center gap-4 justify-between">
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                          {q.category}
+                        </span>
+                        <span className="text-[10px] bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-400 px-1.5 py-0.5 rounded font-medium">
+                          Builds profile
+                        </span>
+                      </div>
+                      <p className="font-medium text-sm leading-snug line-clamp-2">{q.prompt}</p>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-violet-50 dark:bg-violet-950 group-hover:bg-violet-500 group-hover:text-white flex items-center justify-center transition-colors shrink-0">
+                      <ChevronRight className="w-4 h-4 text-violet-600 group-hover:text-white" />
                     </div>
                   </CardContent>
                 </Card>
