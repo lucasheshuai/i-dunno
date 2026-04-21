@@ -359,9 +359,9 @@ export default function ResultsPage() {
                 ? `Next: ${allClusters?.find((c) => c.id === nextQuestion.topicClusterId)?.title ?? "Next cluster"}`
                 : "Up next"}
             </span>
-            <span className="flex items-center gap-2 font-semibold text-base leading-snug">
-              {nextTeaserText}
-              <ChevronRight className="w-4 h-4 shrink-0" />
+            <span className="flex items-start gap-2 font-semibold text-base leading-snug w-full">
+              <span className="flex-1 min-w-0 break-words">{nextTeaserText}</span>
+              <ChevronRight className="w-4 h-4 shrink-0 mt-0.5" />
             </span>
           </Button>
         ) : (
