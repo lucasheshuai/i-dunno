@@ -217,6 +217,16 @@ export const UpdateDemographicsResponse = zod.object({
 });
 
 /**
+ * @summary Get per-archetype population stats
+ */
+export const ArchetypeStatItem = zod.object({
+  percentage: zod.string().nullable(),
+  topGroup: zod.string().nullable(),
+  bottomGroup: zod.string().nullable(),
+});
+export const GetArchetypeStatsResponse = zod.record(zod.string(), ArchetypeStatItem);
+
+/**
  * @summary Get overall app stats (total responses, questions answered, etc.)
  */
 export const GetStatsResponse = zod.object({

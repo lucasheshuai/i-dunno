@@ -20,6 +20,7 @@ import type {
   AggregatedResult,
   AppStats,
   ErrorResponse,
+  GetArchetypeStatsResponse,
   GetTodayQuestionParams,
   HealthStatus,
   LeaderboardResponse,
@@ -935,6 +936,78 @@ export function useGetLeaderboard<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetLeaderboardQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get per-archetype population stats
+ */
+
+export const getGetArchetypeStatsUrl = () => {
+  return `/api/archetype-stats`;
+};
+
+export const getArchetypeStats = async (
+  options?: RequestInit,
+): Promise<GetArchetypeStatsResponse> => {
+  return customFetch<GetArchetypeStatsResponse>(getGetArchetypeStatsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetArchetypeStatsQueryKey = () => {
+  return [`/api/archetype-stats`] as const;
+};
+
+export const getGetArchetypeStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getArchetypeStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getArchetypeStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetArchetypeStatsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getArchetypeStats>>> = ({
+    signal,
+  }) => getArchetypeStats({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getArchetypeStats>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetArchetypeStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getArchetypeStats>>
+>;
+export type GetArchetypeStatsQueryError = ErrorType<unknown>;
+
+export function useGetArchetypeStats<
+  TData = Awaited<ReturnType<typeof getArchetypeStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getArchetypeStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetArchetypeStatsQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

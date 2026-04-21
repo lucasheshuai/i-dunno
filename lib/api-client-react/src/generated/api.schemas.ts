@@ -160,3 +160,11 @@ export type GetTodayQuestionParams = {
 export type GetProfileParams = Record<string, never>;
 
 export type GetLeaderboardParams = Record<string, never>;
+
+export interface ArchetypeStatItem {
+  percentage: string | null;
+  topGroup: string | null;
+  bottomGroup: string | null;
+}
+
+export type GetArchetypeStatsResponse = Record<string, ArchetypeStatItem>;

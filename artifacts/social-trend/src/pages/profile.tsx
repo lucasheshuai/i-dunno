@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useGetProfile, getGetProfileQueryKey } from "@workspace/api-client-react";
+import { useGetProfile, getGetProfileQueryKey, useGetArchetypeStats } from "@workspace/api-client-react";
+import type { ArchetypeStatItem } from "@workspace/api-client-react";
 import { getDemographics, hasSharedDemographics, clearSession } from "@/lib/store";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -96,9 +97,11 @@ function SocialReadingScore({ accuracy }: { accuracy: number }) {
 function PerspectiveProfile({
   label,
   description,
+  archetypeStats,
 }: {
   label: string | null | undefined;
   description: string | null | undefined;
+  archetypeStats?: Record<string, ArchetypeStatItem> | null;
 }) {
   if (!label) {
     return <p className="text-sm text-muted-foreground">Keep answering to shape your profile.</p>;
@@ -119,7 +122,8 @@ function PerspectiveProfile({
     );
   }
 
-  const populationContext = resolvePopulationContext(content);
+  const serverStats = archetypeStats?.[label] ?? null;
+  const populationContext = resolvePopulationContext(content, serverStats);
 
   return (
     <div className="flex flex-col gap-7">
@@ -325,6 +329,8 @@ export default function Profile() {
     },
   });
 
+  const { data: archetypeStats } = useGetArchetypeStats();
+
   if (isLoading) {
     return (
       <div className="w-full max-w-3xl mx-auto px-4 pt-12 flex flex-col gap-8">
@@ -471,6 +477,7 @@ export default function Profile() {
                         <PerspectiveProfile
                           label={profile.profileLabel}
                           description={profile.profileLabelDescription}
+                          archetypeStats={archetypeStats}
                         />
                       )}
                       {milestone.key === "crowd_divergence" && (

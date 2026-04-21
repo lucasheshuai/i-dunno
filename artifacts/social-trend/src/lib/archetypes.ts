@@ -284,11 +284,13 @@ export function getArchetypeContent(profileLabel: string | null | undefined): Ar
 
 export function resolvePopulationContext(
   content: ArchetypeContent,
-  stats?: { percentage: string; topGroup: string; bottomGroup: string }
+  stats?: { percentage: string | null; topGroup: string | null; bottomGroup: string | null } | null
 ): string {
-  const values = stats ?? content.populationMock;
+  const percentage = stats?.percentage ?? content.populationMock.percentage;
+  const topGroup = stats?.topGroup ?? content.populationMock.topGroup;
+  const bottomGroup = stats?.bottomGroup ?? content.populationMock.bottomGroup;
   return content.populationContextTemplate
-    .replace("{percentage}", values.percentage)
-    .replace("{top_group}", values.topGroup)
-    .replace("{bottom_group}", values.bottomGroup);
+    .replace("{percentage}", percentage)
+    .replace("{top_group}", topGroup)
+    .replace("{bottom_group}", bottomGroup);
 }

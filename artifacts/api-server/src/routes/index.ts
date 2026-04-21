@@ -8,6 +8,7 @@ import profileRouter from "./profile";
 import statsRouter from "./stats";
 import leaderboardRouter from "./leaderboard";
 import sessionRouter from "./session";
+import archetypeStatsRouter from "./archetype-stats";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(profileRouter);
 router.use(statsRouter);
 router.use(leaderboardRouter);
 router.use(sessionRouter);
+router.use(archetypeStatsRouter);
 
 export default router;
