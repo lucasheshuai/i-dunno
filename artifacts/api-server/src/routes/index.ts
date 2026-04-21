@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
+import sessionsRouter from "./sessions";
 import questionsRouter from "./questions";
 import clustersRouter from "./clusters";
 import responsesRouter from "./responses";
@@ -10,6 +11,7 @@ import leaderboardRouter from "./leaderboard";
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(sessionsRouter);
 router.use(questionsRouter);
 router.use(clustersRouter);
 router.use(responsesRouter);

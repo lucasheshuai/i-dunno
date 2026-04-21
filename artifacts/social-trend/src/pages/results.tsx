@@ -10,7 +10,7 @@ import {
   useListClusters,
   getListClustersQueryKey,
 } from "@workspace/api-client-react";
-import type { AggregatedResult as BaseAggregatedResult } from "@workspace/api-client-react";
+import type { AggregatedResult } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,12 +47,6 @@ import {
   TopicHookModule,
   hasMeaningfulSplit,
 } from "@/components/result-modules";
-
-// Server may return majorityAnswer:null when the session hasn't answered yet.
-// In practice the results page always arrives with a valid answered session.
-type AggregatedResult = Omit<BaseAggregatedResult, "majorityAnswer"> & {
-  majorityAnswer: string | null;
-};
 
 // ─── Context label helpers ────────────────────────────────────────────────────
 
@@ -101,18 +95,37 @@ export default function ResultsPage() {
   });
 
   // Fetch results with sessionId so the server can verify the caller has already
-  // answered, unlocking the majorityAnswer field (the prediction answer key).
+  // answered. The server returns 403 if the session hasn't answered — in that
+  // case redirect back to the question so the user can answer properly.
   const sessionId = getSessionId();
-  const { data: results, isLoading: isRLoading } = useQuery<AggregatedResult>({
+  const { data: results, isLoading: isRLoading, error: resultsError } = useQuery<AggregatedResult>({
     queryKey: [...getGetQuestionResultsQueryKey(id || ""), sessionId],
     queryFn: async ({ signal }) => {
       const url = `/api/questions/${id}/results?sessionId=${encodeURIComponent(sessionId)}`;
       const res = await fetch(url, { signal });
+      if (res.status === 403) {
+        // Session hasn't answered this question yet — redirect to question page
+        throw Object.assign(new Error("not_answered"), { status: 403 });
+      }
       if (!res.ok) throw new Error("Failed to fetch results");
       return res.json() as Promise<AggregatedResult>;
     },
     enabled: !!id && hasOnboarded(),
+    retry: (failureCount, err) => {
+      // Don't retry on 403 (answer-gate), only on transient errors
+      const e = err as Error & { status?: number };
+      if (e.status === 403) return false;
+      return failureCount < 2;
+    },
   });
+
+  // If the server rejects with 403 (not answered), redirect to the question
+  useEffect(() => {
+    const e = resultsError as (Error & { status?: number }) | null;
+    if (e?.status === 403 && id) {
+      setLocation(`/question/${id}`);
+    }
+  }, [resultsError, id, setLocation]);
 
   const { data: allQuestions } = useListQuestions(
     {},
@@ -279,7 +292,7 @@ export default function ResultsPage() {
         <PredictionScoreModule
           userAnswer={userAnswer}
           userPrediction={userPrediction}
-          majorityAnswer={results.majorityAnswer ?? ""}
+          majorityAnswer={results.majorityAnswer}
           majorityPct={majorityPct}
           userAnswerPct={userAnswerPct}
         />

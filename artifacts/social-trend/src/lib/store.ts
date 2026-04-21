@@ -1,11 +1,36 @@
 
-export const getSessionId = () => {
-  let id = localStorage.getItem('st_session_id');
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem('st_session_id', id);
+/** Returns the cached server-issued session ID, or empty string if not yet initialized. */
+export const getSessionId = (): string => {
+  return localStorage.getItem('st_session_id') ?? '';
+};
+
+/** Returns the cached server-issued bearer token, or null if not yet initialized. */
+export const getSessionToken = (): string | null => {
+  return localStorage.getItem('st_session_token');
+};
+
+/**
+ * Initialize a server-issued session if one doesn't already exist.
+ * Calls POST /api/sessions to obtain a server-controlled sessionId + bearer token.
+ * Must be called once on app startup before any write operations.
+ */
+export const initSession = async (): Promise<void> => {
+  const existingId = localStorage.getItem('st_session_id');
+  const existingToken = localStorage.getItem('st_session_token');
+  if (existingId && existingToken) return; // already initialized
+
+  try {
+    const resp = await fetch('/api/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!resp.ok) return;
+    const { sessionId, token } = (await resp.json()) as { sessionId: string; token: string };
+    localStorage.setItem('st_session_id', sessionId);
+    localStorage.setItem('st_session_token', token);
+  } catch {
+    // Network error: writes will fail with 401 until the session is initialized
   }
-  return id;
 };
 
 export const hasOnboarded = () => {

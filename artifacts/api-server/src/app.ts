@@ -42,6 +42,7 @@ const writeLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === "test",
 });
 
+app.use("/api/sessions", writeLimiter);
 app.use("/api/responses", writeLimiter);
 app.use("/api/profile", writeLimiter);
 

@@ -5,8 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout";
 import NotFound from "@/pages/not-found";
 import { useEffect } from "react";
-import { useGetProfile } from "@workspace/api-client-react";
-import { getSessionId, syncAnsweredFromServer } from "@/lib/store";
+import { useGetProfile, setAuthTokenGetter } from "@workspace/api-client-react";
+import { getSessionId, getSessionToken, initSession, syncAnsweredFromServer } from "@/lib/store";
 
 import Home from "@/pages/home";
 import QuestionPage from "@/pages/question";
@@ -22,6 +22,14 @@ const queryClient = new QueryClient();
 function SessionSync() {
   const sessionId = getSessionId();
   const { data: profile } = useGetProfile({ sessionId });
+
+  useEffect(() => {
+    // Initialize server-issued session token on first load, then wire the bearer
+    // token getter so all subsequent write calls include Authorization headers.
+    initSession().then(() => {
+      setAuthTokenGetter(getSessionToken);
+    });
+  }, []);
 
   useEffect(() => {
     if (profile?.answeredQuestionIds !== undefined) {

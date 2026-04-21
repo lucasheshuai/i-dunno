@@ -80,9 +80,11 @@ router.get("/questions/:id/results", async (req, res): Promise<void> => {
     return;
   }
 
-  // Only reveal majorityAnswer (the prediction answer key) after the caller has
-  // committed their own answer. This prevents scripted requests from reading the
-  // answer key before submitting, which would trivially game prediction scoring.
+  // Results (including distribution percentages that reveal the winning option) are
+  // only available after the caller has committed their own answer.  Returning any
+  // partial distribution before that point lets scripted callers infer the majority
+  // answer by picking the highest-percentage option — which is equivalent to leaking
+  // it directly.  Return 403 so the client knows to prompt the user to answer first.
   const sessionId = typeof req.query.sessionId === "string" ? req.query.sessionId.trim() : null;
   if (sessionId) {
     const answeredIds = await getAnsweredQuestionIds(sessionId);
@@ -92,10 +94,7 @@ router.get("/questions/:id/results", async (req, res): Promise<void> => {
     }
   }
 
-  // Session hasn't answered yet (or no sessionId supplied): return distribution
-  // and segment data for preview purposes but strip the majority answer key.
-  const { majorityAnswer: _redacted, ...safeResult } = result;
-  res.json({ ...safeResult, majorityAnswer: null });
+  res.status(403).json({ error: "You must answer this question before viewing results" });
 });
 
 export default router;

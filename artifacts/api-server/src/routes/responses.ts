@@ -3,17 +3,37 @@ import { randomUUID } from "crypto";
 import { SubmitResponseBody } from "@workspace/api-zod";
 import { ensureSession, addSessionResponse, getAnsweredQuestionIds } from "../lib/session-store";
 import { questions } from "../lib/seed-data";
+import { extractSessionFromBearer } from "../lib/session-token";
 
 const router: IRouter = Router();
 
 router.post("/responses", async (req, res): Promise<void> => {
+  // ── Session identity verification ─────────────────────────────────────────
+  // sessionId must come from a server-issued bearer token, not a freely
+  // fabricated value in the request body.  This prevents callers from
+  // submitting responses on behalf of arbitrary session IDs.
+  const tokenSessionId = extractSessionFromBearer(req.headers.authorization);
+  if (!tokenSessionId) {
+    res.status(401).json({ error: "Valid session token required. Call POST /api/sessions first." });
+    return;
+  }
+
   const parsed = SubmitResponseBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
 
-  const { sessionId, questionId, answer, predictedMajority } = parsed.data;
+  const { sessionId: bodySessionId, questionId, answer, predictedMajority } = parsed.data;
+
+  // Defense-in-depth: reject mismatches between the token identity and the
+  // body identity (indicates a confused or malicious client).
+  if (bodySessionId !== tokenSessionId) {
+    res.status(403).json({ error: "Session token does not match request body sessionId" });
+    return;
+  }
+
+  const sessionId = tokenSessionId;
 
   const question = questions.find((q) => q.id === questionId);
   if (!question) {
