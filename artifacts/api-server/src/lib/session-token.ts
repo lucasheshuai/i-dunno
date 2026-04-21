@@ -102,30 +102,43 @@ export function issueChallenge(): string {
  * Verify a challenge token.
  * Returns true if the challenge is valid, not expired, and has not been used before.
  * Marks the challenge as used on success so it cannot be replayed.
+ *
+ * Replay protection is keyed on the canonical `nonce|ts` identity (not the raw
+ * token string), so case-variant or whitespace-padded signatures of the same
+ * challenge are all rejected once the first valid form has been redeemed.
+ * Additionally, the signature field is validated to be exactly 64 lowercase hex
+ * characters before any Buffer conversion, preventing hex case-confusion attacks.
  */
 export function redeemChallenge(token: string): boolean {
   const parts = token.split(CHALLENGE_SEP);
   if (parts.length !== 3) return false;
   const [nonce, ts, sig] = parts;
 
-  if (_usedChallenges.has(token)) return false;
+  // Strictly validate signature format: exactly 64 lowercase hex chars (SHA-256 output)
+  if (!/^[0-9a-f]{64}$/.test(sig)) return false;
 
   const issued = parseInt(ts, 10);
   if (isNaN(issued) || Date.now() - issued > CHALLENGE_TTL_MS) return false;
 
+  // Use canonical identity (nonce + timestamp, without signature) for replay tracking.
+  // This ensures case-variant or otherwise re-encoded forms of the same challenge
+  // are all rejected once the original valid token has been redeemed.
+  const canonicalId = `${nonce}${CHALLENGE_SEP}${ts}`;
+  if (_usedChallenges.has(canonicalId)) return false;
+
   const expected = createHmac("sha256", SECRET)
-    .update(`${nonce}${CHALLENGE_SEP}${ts}`)
+    .update(canonicalId)
     .digest("hex");
 
   try {
+    // Both sig and expected are now guaranteed lowercase hex of the same length
     const sigBuf = Buffer.from(sig, "hex");
     const expBuf = Buffer.from(expected, "hex");
-    if (sigBuf.length !== expBuf.length) return false;
     if (!timingSafeEqual(sigBuf, expBuf)) return false;
   } catch {
     return false;
   }
 
-  _usedChallenges.add(token);
+  _usedChallenges.add(canonicalId);
   return true;
 }
