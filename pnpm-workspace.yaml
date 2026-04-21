@@ -158,9 +158,13 @@ overrides:
   "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0"
   esbuild: "0.27.3"
   # Security vulnerability fixes for transitive dependencies
-  brace-expansion: ">=2.0.3"
-  lodash: ">=4.18.0"
-  path-to-regexp: ">=8.4.0"
-  # picomatch: micromatch expects ^2.x API; pin it to the patched 2.x version
+  # brace-expansion: minimatch@9 uses ^2.x; pin to patched 2.x to avoid major-version jump
+  "minimatch>brace-expansion": "2.0.3"
+  # lodash: recharts is the only consumer; pin to patched 4.x (4.18.0 is deprecated)
+  "recharts>lodash": "4.18.1"
+  # path-to-regexp: express>router chain; pin to patched 8.4 patch
+  "router>path-to-regexp": "8.4.0"
+  # picomatch: micromatch expects ^2.x API; pin to patched 2.x version
   "micromatch>picomatch": "2.3.2"
-  yaml: ">=2.8.3"
+  # yaml: only vite uses it; pin to exact patched version
+  "vite>yaml": "2.8.3"
