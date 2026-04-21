@@ -121,7 +121,7 @@ export default function Explore() {
     );
 
     return allQuestions
-      .filter(q => !isQuestionAnswered(q.id) && q.profileSignals.length > 0)
+      .filter(q => !serverAnsweredSet.has(q.id) && q.profileSignals.length > 0)
       .map(q => {
         // Prioritize questions that add NEW signal dimensions not yet in the user's profile
         const newSignals = q.profileSignals.filter(s => !dominantSignals.has(s)).length;
