@@ -210,7 +210,7 @@ export function DemographicSplitModule({ segments }: DemographicSplitProps) {
   );
 }
 
-export function hasMeaningfulSplit(segments: SegmentResult[], threshold = 20): boolean {
+export function hasMeaningfulSplit(segments: SegmentResult[], threshold = 8): boolean {
   const split = getInterGroupSplit(segments);
   return !!split && split.spread >= threshold;
 }

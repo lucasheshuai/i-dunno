@@ -201,41 +201,41 @@ export default function ResultsPage() {
     nextProfileSignals.length > 0
   );
 
-  // Prediction Score always shows (mandatory, 1 of max 3 total).
-  // Build eligible optional modules, then randomize their order so that
-  // different questions show different combinations — no two results feel identical.
-  // Cap at 2 optional so total never exceeds 3 modules.
-  const eligibleOptional: Array<'crowd_shock' | 'demographic_split' | 'profile_builder' | 'topic_hook'> = [];
-
-  if (question.rewardTags.includes("crowd_shock") && userAnswerPct < 40 && !!userAnswer) {
-    eligibleOptional.push('crowd_shock');
-  }
-  if (
+  // Demographic split is a guaranteed card — never put into the random pool.
+  // The user explicitly unlocked it by sharing demographics, so it must always
+  // appear when the question has segment data. This is separate from the
+  // randomised "variable reward" modules below.
+  const showDemographicSplit =
     question.rewardTags.includes("demographic_split") &&
     hasSharedDemographics() &&
-    (results.segments?.length ?? 0) > 0 &&
-    hasMeaningfulSplit(results.segments ?? [], 15)
-  ) {
-    eligibleOptional.push('demographic_split');
+    (results.segments?.length ?? 0) > 0;
+
+  // Build the random optional pool (crowd_shock, profile_builder, topic_hook).
+  // When the demographic split is already guaranteed we only fill 1 extra slot
+  // so the total optional modules shown stays at ≤ 2.
+  const eligibleRandom: Array<'crowd_shock' | 'profile_builder' | 'topic_hook'> = [];
+
+  if (question.rewardTags.includes("crowd_shock") && userAnswerPct < 40 && !!userAnswer) {
+    eligibleRandom.push('crowd_shock');
   }
   if (question.profileSignals.length > 0 && answerCount >= 3) {
-    eligibleOptional.push('profile_builder');
+    eligibleRandom.push('profile_builder');
   }
   if (nextQuestion) {
-    eligibleOptional.push('topic_hook');
+    eligibleRandom.push('topic_hook');
   }
 
-  // Shuffle eligible list using question ID as a stable seed so the set is
-  // consistent within a session but varies across questions
+  // Shuffle the random pool using question ID as a stable seed so the set is
+  // consistent within a session but varies across questions.
   const seed = id ? id.charCodeAt(id.length - 1) : 0;
-  const shuffled = [...eligibleOptional].sort(
+  const shuffledRandom = [...eligibleRandom].sort(
     (a, b) => ((a.charCodeAt(0) + seed) % 7) - ((b.charCodeAt(0) + seed) % 7)
   );
-  const activeOptional = new Set(shuffled.slice(0, 2));
-  const showCrowdShock = activeOptional.has('crowd_shock');
-  const showDemographicSplit = activeOptional.has('demographic_split');
-  const showProfileBuilder = activeOptional.has('profile_builder');
-  const showTopicHook = activeOptional.has('topic_hook');
+  const randomSlots = showDemographicSplit ? 1 : 2;
+  const activeRandom = new Set(shuffledRandom.slice(0, randomSlots));
+  const showCrowdShock = activeRandom.has('crowd_shock');
+  const showProfileBuilder = activeRandom.has('profile_builder');
+  const showTopicHook = activeRandom.has('topic_hook');
 
   // ─── Chart data ──────────────────────────────────────────────────────────────
 

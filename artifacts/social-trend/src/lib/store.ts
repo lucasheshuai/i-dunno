@@ -1,10 +1,9 @@
 
 // ─── Session Reset ────────────────────────────────────────────────────────────
 
-const LOCAL_STORAGE_KEYS = ['st_session_id', 'st_onboarded', 'st_answered'];
+const LOCAL_STORAGE_KEYS = ['st_session_id', 'st_onboarded', 'st_answered', 'st_demographics_shared'];
 
 const SESSION_STORAGE_KEYS = [
-  'st_demographics_shared',
   'st_demographics',
   'st_history',
   'st_nickname',
@@ -32,14 +31,14 @@ export const setOnboarded = () => {
   localStorage.setItem('st_onboarded', 'true');
 };
 
-// ─── Demographics (sensitive — sessionStorage, cleared on browser close) ──────
+// ─── Demographics shared flag (non-PII boolean — localStorage, persists across sessions) ──
 
 export const hasSharedDemographics = () => {
-  return sessionStorage.getItem('st_demographics_shared') === 'true';
+  return localStorage.getItem('st_demographics_shared') === 'true';
 };
 
 export const setDemographicsShared = () => {
-  sessionStorage.setItem('st_demographics_shared', 'true');
+  localStorage.setItem('st_demographics_shared', 'true');
 };
 
 export interface Demographics {
