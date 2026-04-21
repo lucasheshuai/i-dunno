@@ -9,7 +9,6 @@ const SESSION_STORAGE_KEYS = [
   'st_history',
   'st_nickname',
   'st_feed_cursor',
-  'st_profile_signals',
 ];
 
 export const clearSession = async (): Promise<void> => {
@@ -194,52 +193,6 @@ export const setFeedCursor = (clusterId: string, questionId: string): void => {
 
 export const clearFeedCursor = (): void => {
   sessionStorage.removeItem('st_feed_cursor');
-};
-
-// ─── Profile Signal Accumulation (sensitive — sessionStorage) ─────────────────
-
-const SIGNAL_LABELS: Record<string, string> = {
-  romantic: 'Hopeless Romantic',
-  pragmatic: 'Pragmatic Realist',
-  traditionalist: 'Old-School Traditionalist',
-  progressive: 'Modern Thinker',
-  security_focused: 'Security Seeker',
-  emotionally_aware: 'Emotionally Aware',
-  independent: 'Independent Spirit',
-};
-
-const getStoredProfileSignals = (): Record<string, string[]> => {
-  try {
-    return JSON.parse(sessionStorage.getItem('st_profile_signals') || '{}');
-  } catch {
-    return {};
-  }
-};
-
-export const recordProfileSignals = (questionId: string, signals: string[]) => {
-  const stored = getStoredProfileSignals();
-  stored[questionId] = signals;
-  sessionStorage.setItem('st_profile_signals', JSON.stringify(stored));
-};
-
-export const getProfileSignalCounts = (): Record<string, number> => {
-  const stored = getStoredProfileSignals();
-  const counts: Record<string, number> = {};
-  Object.values(stored).flat().forEach(s => {
-    counts[s] = (counts[s] || 0) + 1;
-  });
-  return counts;
-};
-
-export const getDominantProfileLabel = (): string | null => {
-  const stored = getStoredProfileSignals();
-  const counts: Record<string, number> = {};
-  Object.values(stored).flat().forEach(s => {
-    counts[s] = (counts[s] || 0) + 1;
-  });
-  if (!Object.keys(counts).length) return null;
-  const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
-  return dominant ? (SIGNAL_LABELS[dominant] ?? null) : null;
 };
 
 // ─── Cluster-Sequential Navigation ───────────────────────────────────────────

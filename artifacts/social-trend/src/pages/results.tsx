@@ -9,6 +9,8 @@ import {
   getListQuestionsQueryKey,
   useListClusters,
   getListClustersQueryKey,
+  useGetProfile,
+  getGetProfileQueryKey,
 } from "@workspace/api-client-react";
 import type { AggregatedResult } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -30,8 +32,6 @@ import {
   hasOnboarded,
   hasSharedDemographics,
   getAnswerCount,
-  getDominantProfileLabel,
-  recordProfileSignals,
   getAnsweredQuestions,
   getNextInSequence,
   setFeedCursor,
@@ -114,12 +114,9 @@ export default function ResultsPage() {
     query: { queryKey: getListClustersQueryKey() },
   });
 
-  // Record profile signals for this question once data is available
-  useEffect(() => {
-    if (question && id && userAnswer) {
-      recordProfileSignals(id, question.profileSignals);
-    }
-  }, [question, id, userAnswer]);
+  const { data: profile } = useGetProfile({
+    query: { queryKey: getGetProfileQueryKey() },
+  });
 
   // Compute next-in-sequence info
   const sequenceResult = useMemo(() => {
@@ -168,7 +165,7 @@ export default function ResultsPage() {
   const majorityPct = majorityDist?.percentage ?? 0;
 
   const answerCount = getAnswerCount();
-  const dominantLabel = getDominantProfileLabel();
+  const dominantLabel = profile?.profileLabel ?? null;
 
   // ─── Next question info (needed for module selection below) ──────────────────
 

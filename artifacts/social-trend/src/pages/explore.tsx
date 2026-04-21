@@ -4,11 +4,13 @@ import {
   getListQuestionsQueryKey,
   useListClusters,
   getListClustersQueryKey,
+  useGetProfile,
+  getGetProfileQueryKey,
 } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import { getAnsweredQuestions, isQuestionAnswered, getRecentResponses, getProfileSignalCounts } from "@/lib/store";
+import { getAnsweredQuestions, isQuestionAnswered, getRecentResponses } from "@/lib/store";
 import { ChevronRight, TrendingUp, Target, CheckCircle2, UserCircle2 } from "lucide-react";
 import { useMemo } from "react";
 
@@ -22,6 +24,10 @@ export default function Explore() {
 
   const { data: allClusters, isLoading: isClustersLoading } = useListClusters({
     query: { queryKey: getListClustersQueryKey() },
+  });
+
+  const { data: profile } = useGetProfile({
+    query: { queryKey: getGetProfileQueryKey() },
   });
 
   const answeredIds = useMemo(() => new Set(Object.keys(getAnsweredQuestions())), []);
@@ -91,18 +97,28 @@ export default function Explore() {
   // extend the user's existing profile into underexplored territory.
   // If user has no signals yet, shows questions with the richest profileSignals array.
   const bestForProfile = useMemo(() => {
-    if (!allQuestions) return [];
-    const signalCounts = getProfileSignalCounts();
-    const hasSignals = Object.keys(signalCounts).length > 0;
+    if (!allQuestions || !profile?.answeredQuestionIds?.length) return [];
+
+    // Compute signal counts from the questions the user has already answered,
+    // using the server's answered list so it's consistent with the API label system.
+    const signalCounts: Record<string, number> = {};
+    const serverAnsweredSet = new Set(profile.answeredQuestionIds);
+    for (const q of allQuestions) {
+      if (serverAnsweredSet.has(q.id)) {
+        for (const s of q.profileSignals) {
+          signalCounts[s] = (signalCounts[s] ?? 0) + 1;
+        }
+      }
+    }
+
+    if (!Object.keys(signalCounts).length) return [];
+
     const dominantSignals = new Set(
       Object.entries(signalCounts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 2)
         .map(([s]) => s)
     );
-
-    // Only personalize once the user has built some profile signals
-    if (!hasSignals) return [];
 
     return allQuestions
       .filter(q => !isQuestionAnswered(q.id) && q.profileSignals.length > 0)
@@ -117,7 +133,7 @@ export default function Explore() {
       .sort((a, b) => b.score - a.score)
       .map(({ q }) => q)
       .slice(0, 4);
-  }, [allQuestions, answeredIds]);
+  }, [allQuestions, answeredIds, profile?.answeredQuestionIds]);
 
   if (isLoading) {
     return (

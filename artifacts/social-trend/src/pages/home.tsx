@@ -16,7 +16,6 @@ import {
   getAnsweredQuestions,
   getNextQuestion,
   getFeedCursor,
-  getDominantProfileLabel,
   getRecentResponses,
   type QuestionRef,
   type ClusterRef,
@@ -84,7 +83,7 @@ export default function Home() {
     return { total: recent.length, againstGrain };
   }, [answerCount]);
 
-  const profileLabel = getDominantProfileLabel();
+  const profileLabel = profile?.profileLabel ?? null;
   const accuracy = profile ? Math.round(profile.predictionAccuracy * 100) : null;
   const isLoading = isQuestionsLoading || isClustersLoading;
 
