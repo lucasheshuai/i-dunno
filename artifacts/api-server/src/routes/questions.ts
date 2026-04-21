@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { questions, mockResults } from "../lib/seed-data";
 import { getAnsweredQuestionIds } from "../lib/session-store";
+import { extractSessionFromBearer } from "../lib/session-token";
 import {
   ListQuestionsQueryParams,
   GetQuestionParams,
@@ -80,12 +81,12 @@ router.get("/questions/:id/results", async (req, res): Promise<void> => {
     return;
   }
 
-  // Results (including distribution percentages that reveal the winning option) are
-  // only available after the caller has committed their own answer.  Returning any
-  // partial distribution before that point lets scripted callers infer the majority
-  // answer by picking the highest-percentage option — which is equivalent to leaking
-  // it directly.  Return 403 so the client knows to prompt the user to answer first.
-  const sessionId = typeof req.query.sessionId === "string" ? req.query.sessionId.trim() : null;
+  // Results are gated behind authenticated session identity: the caller must
+  // present a valid server-issued bearer token AND that session must have already
+  // answered this question.  Using the bearer token (rather than a plain query
+  // param) ensures session identity is tied to server-issued proof — an attacker
+  // cannot harvest results by constructing arbitrary sessionId values.
+  const sessionId = extractSessionFromBearer(req.headers.authorization);
   if (sessionId) {
     const answeredIds = await getAnsweredQuestionIds(sessionId);
     if (answeredIds.has(params.data.id)) {

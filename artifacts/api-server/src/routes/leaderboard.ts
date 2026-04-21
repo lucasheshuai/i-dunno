@@ -48,7 +48,13 @@ async function getRankedLeaderboard(): Promise<Pick<CachedLeaderboard, "ranked" 
   // Single SQL aggregation: no individual response rows loaded into memory
   const rows = await getLeaderboardStats(majorityAnswerMap);
 
+  // Minimum threshold: require at least 3 answered questions to appear in rankings.
+  // Low-effort synthetic sessions (created to inflate scores with 1-2 lucky answers)
+  // are excluded, making wholesale stat manipulation proportionally more expensive.
+  const MIN_ANSWERS_FOR_RANKING = 3;
+
   const entries = rows
+    .filter((r) => r.answeredCount >= MIN_ANSWERS_FOR_RANKING)
     .map((r) => {
       const predictionAccuracy = r.answeredCount > 0 ? r.correctPredictions / r.answeredCount : 0;
       return {

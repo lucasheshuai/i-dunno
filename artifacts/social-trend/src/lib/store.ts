@@ -11,7 +11,12 @@ export const getSessionToken = (): string | null => {
 
 /**
  * Initialize a server-issued session if one doesn't already exist.
- * Calls POST /api/sessions to obtain a server-controlled sessionId + bearer token.
+ *
+ * Uses a challenge-response flow:
+ * 1. GET /api/sessions/challenge → fresh signed challenge token
+ * 2. POST /api/sessions { challenge } → server creates session, returns {sessionId, token}
+ *
+ * The mandatory round-trip prevents offline/pre-computed session minting.
  * Must be called once on app startup before any write operations.
  */
 export const initSession = async (): Promise<void> => {
@@ -20,12 +25,19 @@ export const initSession = async (): Promise<void> => {
   if (existingId && existingToken) return; // already initialized
 
   try {
-    const resp = await fetch('/api/sessions', {
+    // Step 1: obtain a one-time challenge from the server
+    const challengeResp = await fetch('/api/sessions/challenge');
+    if (!challengeResp.ok) return;
+    const { challenge } = (await challengeResp.json()) as { challenge: string };
+
+    // Step 2: create the session using the challenge
+    const sessionResp = await fetch('/api/sessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ challenge }),
     });
-    if (!resp.ok) return;
-    const { sessionId, token } = (await resp.json()) as { sessionId: string; token: string };
+    if (!sessionResp.ok) return;
+    const { sessionId, token } = (await sessionResp.json()) as { sessionId: string; token: string };
     localStorage.setItem('st_session_id', sessionId);
     localStorage.setItem('st_session_token', token);
   } catch {

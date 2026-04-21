@@ -35,7 +35,7 @@ import {
   getAnsweredQuestions,
   getNextInSequence,
   setFeedCursor,
-  getSessionId,
+  getSessionToken,
   type QuestionRef,
   type ClusterRef,
 } from "@/lib/store";
@@ -94,17 +94,18 @@ export default function ResultsPage() {
     query: { enabled: !!id, queryKey: getGetQuestionQueryKey(id || "") },
   });
 
-  // Fetch results with sessionId so the server can verify the caller has already
-  // answered. The server returns 403 if the session hasn't answered — in that
-  // case redirect back to the question so the user can answer properly.
-  const sessionId = getSessionId();
+  // Fetch results using the server-issued bearer token for identity verification.
+  // The server checks the token signature and verifies the session has answered
+  // this question before returning results.  Returns 403 if not answered — in
+  // that case we redirect back to the question so the user can answer properly.
   const { data: results, isLoading: isRLoading, error: resultsError } = useQuery<AggregatedResult>({
-    queryKey: [...getGetQuestionResultsQueryKey(id || ""), sessionId],
+    queryKey: [...getGetQuestionResultsQueryKey(id || ""), "auth"],
     queryFn: async ({ signal }) => {
-      const url = `/api/questions/${id}/results?sessionId=${encodeURIComponent(sessionId)}`;
-      const res = await fetch(url, { signal });
+      const token = getSessionToken();
+      const headers: Record<string, string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      const res = await fetch(`/api/questions/${id}/results`, { signal, headers });
       if (res.status === 403) {
-        // Session hasn't answered this question yet — redirect to question page
         throw Object.assign(new Error("not_answered"), { status: 403 });
       }
       if (!res.ok) throw new Error("Failed to fetch results");
@@ -112,7 +113,6 @@ export default function ResultsPage() {
     },
     enabled: !!id && hasOnboarded(),
     retry: (failureCount, err) => {
-      // Don't retry on 403 (answer-gate), only on transient errors
       const e = err as Error & { status?: number };
       if (e.status === 403) return false;
       return failureCount < 2;
