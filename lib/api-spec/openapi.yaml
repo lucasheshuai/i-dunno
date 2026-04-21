@@ -194,6 +194,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/UserProfile"
 
+  /archetype-stats:
+    get:
+      operationId: getArchetypeStats
+      tags: [profile]
+      summary: Get per-archetype population stats
+      responses:
+        "200":
+          description: Per-archetype percentage and demographic breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetArchetypeStatsResponse"
+
   /stats:
     get:
       operationId: getStats
@@ -537,6 +550,28 @@ components:
         - entries
         - currentUserRank
         - totalParticipants
+
+    ArchetypeStatItem:
+      type: object
+      properties:
+        percentage:
+          type: string
+          nullable: true
+        topGroup:
+          type: string
+          nullable: true
+        bottomGroup:
+          type: string
+          nullable: true
+      required:
+        - percentage
+        - topGroup
+        - bottomGroup
+
+    GetArchetypeStatsResponse:
+      type: object
+      additionalProperties:
+        $ref: "#/components/schemas/ArchetypeStatItem"
 
     AppStats:
       type: object
