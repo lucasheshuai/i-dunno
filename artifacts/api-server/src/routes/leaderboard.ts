@@ -1,5 +1,4 @@
 import { Router, type IRouter } from "express";
-import { GetLeaderboardQueryParams } from "@workspace/api-zod";
 import { getLeaderboardStats } from "../lib/session-store";
 import { mockResults } from "../lib/seed-data";
 
@@ -95,13 +94,7 @@ async function getRankedLeaderboard(): Promise<Pick<CachedLeaderboard, "ranked" 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 router.get("/leaderboard", async (req, res): Promise<void> => {
-  const parsed = GetLeaderboardQueryParams.safeParse(req.query);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-
-  const { sessionId } = parsed.data;
+  const sessionId = req.sessionId;
   const { ranked, totalParticipants } = await getRankedLeaderboard();
 
   // Stamp isCurrentUser per request (not cached, session-specific)

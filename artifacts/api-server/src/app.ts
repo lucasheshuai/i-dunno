@@ -1,9 +1,11 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import rateLimit from "express-rate-limit";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { sessionMiddleware } from "./middleware/session";
 
 const app: Express = express();
 
@@ -26,9 +28,11 @@ app.use(
     },
   }),
 );
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(sessionMiddleware);
 
 // Rate limiting for write endpoints: prevents scripted mass-creation of sessions
 // and synthetic response submissions. Generous enough for real users (100 writes

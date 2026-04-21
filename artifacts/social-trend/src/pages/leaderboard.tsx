@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { getSessionId, getNickname, setNickname } from "@/lib/store";
+import { getNickname, setNickname } from "@/lib/store";
 
 interface LeaderboardEntry {
   rank: number;
@@ -184,18 +184,13 @@ function NicknameDialog({
 }
 
 export default function Leaderboard() {
-  const sessionId = getSessionId();
   const [data, setData] = useState<LeaderboardData | null>(null);
   const [showDialog, setShowDialog] = useState<boolean>(() => getNickname() === null);
   const [loading, setLoading] = useState<boolean>(() => getNickname() !== null);
 
   function fetchLeaderboard() {
     setLoading(true);
-    const url = sessionId
-      ? `/api/leaderboard?sessionId=${encodeURIComponent(sessionId)}`
-      : "/api/leaderboard";
-
-    fetch(url)
+    fetch("/api/leaderboard")
       .then((r) => r.json())
       .then((json) => setData(json as LeaderboardData))
       .catch(() => setData({ entries: [], currentUserRank: null, totalParticipants: 0 }))
@@ -209,7 +204,7 @@ export default function Leaderboard() {
         fetch("/api/profile", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId, nickname: savedNickname }),
+          body: JSON.stringify({ nickname: savedNickname }),
         }).catch(() => {});
       }
       fetchLeaderboard();
@@ -221,7 +216,7 @@ export default function Leaderboard() {
     fetch("/api/profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId, nickname: name }),
+      body: JSON.stringify({ nickname: name }),
     }).catch(() => {});
     setLoading(true);
     setShowDialog(false);

@@ -4,7 +4,7 @@ import { useGetQuestion, getGetQuestionQueryKey, useSubmitResponse } from "@work
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import { getFlowState, getSessionId, hasOnboarded, markQuestionAnswered, setFlowPrediction } from "@/lib/store";
+import { getFlowState, hasOnboarded, markQuestionAnswered, setFlowPrediction } from "@/lib/store";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -51,7 +51,6 @@ export default function PredictPage() {
       setFlowPrediction(id, selectedOption);
       submitMutation.mutate({
         data: {
-          sessionId: getSessionId(),
           questionId: id,
           answer: flowState.answer,
           predictedMajority: selectedOption

@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useGetProfile, getGetProfileQueryKey } from "@workspace/api-client-react";
-import { getSessionId, getDemographics, hasSharedDemographics } from "@/lib/store";
+import { getDemographics, hasSharedDemographics, clearSession } from "@/lib/store";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Award, Target, Hash, Compass, Lock, Star, TrendingUp, TrendingDown, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Award, Target, Hash, Compass, Lock, Star, TrendingUp, TrendingDown, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react";
 
 // ─── Milestone config ─────────────────────────────────────────────────────────
 
@@ -226,14 +228,18 @@ function BlindSpot({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function Profile() {
-  const sessionId = getSessionId();
+  const [resetting, setResetting] = useState(false);
   const localDemographics = getDemographics();
   const demographicsShared = hasSharedDemographics();
 
-  const { data: profile, isLoading } = useGetProfile({ sessionId }, {
+  const handleReset = async () => {
+    setResetting(true);
+    await clearSession();
+  };
+
+  const { data: profile, isLoading } = useGetProfile({
     query: {
-      enabled: !!sessionId,
-      queryKey: getGetProfileQueryKey({ sessionId }),
+      queryKey: getGetProfileQueryKey(),
     },
   });
 
@@ -461,6 +467,22 @@ export default function Profile() {
           </div>
         </div>
       )}
+
+      <div className="mt-12 pt-8 border-t border-border/40 flex flex-col items-center gap-3">
+        <p className="text-sm text-muted-foreground text-center max-w-xs">
+          On a shared device? Starting fresh clears your session and all local data so the next person starts clean.
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleReset}
+          disabled={resetting}
+          className="text-muted-foreground hover:text-destructive hover:border-destructive/50 transition-colors"
+        >
+          <RotateCcw className="w-3.5 h-3.5 mr-2" />
+          {resetting ? "Clearing…" : "Start Fresh"}
+        </Button>
+      </div>
     </motion.div>
   );
 }

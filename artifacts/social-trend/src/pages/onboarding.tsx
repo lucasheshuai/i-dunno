@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useUpdateDemographics } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { getSessionId, setOnboarded, setDemographicsShared, saveDemographics } from "@/lib/store";
+import { setOnboarded, setDemographicsShared, saveDemographics } from "@/lib/store";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -35,7 +35,6 @@ export default function Onboarding() {
     saveDemographics(data);
     updateMutation.mutate({
       data: {
-        sessionId: getSessionId(),
         ageRange: data.ageRange || null,
         gender: data.gender || null,
         region: data.region || null,

@@ -1,9 +1,7 @@
 import { Router, type IRouter } from "express";
-import { GetProfileQueryParams, UpdateDemographicsBody } from "@workspace/api-zod";
+import { UpdateDemographicsBody } from "@workspace/api-zod";
 import { getSession, ensureSession, updateSessionDemographics } from "../lib/session-store";
 import { mockResults, questions } from "../lib/seed-data";
-import { extractSessionFromBearer } from "../lib/session-token";
-
 const router: IRouter = Router();
 
 // ─── Profile label definitions ───────────────────────────────────────────────
@@ -332,38 +330,20 @@ function buildProfileResponse(
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
 router.get("/profile", async (req, res): Promise<void> => {
-  const parsed = GetProfileQueryParams.safeParse(req.query);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-  const session = await getSession(parsed.data.sessionId);
-  res.json(buildProfileResponse(parsed.data.sessionId, session));
+  const sessionId = req.sessionId;
+  const session = await getSession(sessionId);
+  res.json(buildProfileResponse(sessionId, session));
 });
 
 router.post("/profile", async (req, res): Promise<void> => {
-  // Require server-issued bearer token to prevent demographic inflation via
-  // fabricated session IDs (which would corrupt profile stats and leaderboards).
-  const tokenSessionId = extractSessionFromBearer(req.headers.authorization);
-  if (!tokenSessionId) {
-    res.status(401).json({ error: "Valid session token required. Call POST /api/sessions first." });
-    return;
-  }
-
   const parsed = UpdateDemographicsBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
 
-  const { sessionId: bodySessionId, nickname, ageRange, gender, region, relationshipStatus } = parsed.data;
-
-  if (bodySessionId !== tokenSessionId) {
-    res.status(403).json({ error: "Session token does not match request body sessionId" });
-    return;
-  }
-
-  const sessionId = tokenSessionId;
+  const sessionId = req.sessionId;
+  const { nickname, ageRange, gender, region, relationshipStatus } = parsed.data;
 
   await ensureSession(sessionId);
 

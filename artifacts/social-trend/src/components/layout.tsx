@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { ArrowLeft, User, Library, Sparkles, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getSessionId, hasSharedDemographics, getDemographics, getNickname } from "@/lib/store";
+import { hasSharedDemographics, getDemographics, getNickname } from "@/lib/store";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -12,11 +12,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
     if (hasSharedDemographics()) {
       const demographics = getDemographics();
       const nickname = getNickname();
-      const sessionId = getSessionId();
       fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, nickname, ...demographics }),
+        body: JSON.stringify({ nickname, ...demographics }),
       }).catch(() => {});
     }
   }, []);

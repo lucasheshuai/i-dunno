@@ -17,7 +17,6 @@ import {
   getNextQuestion,
   getFeedCursor,
   getDominantProfileLabel,
-  getSessionId,
   getRecentResponses,
   type QuestionRef,
   type ClusterRef,
@@ -26,7 +25,6 @@ import { useMemo } from "react";
 
 export default function Home() {
   const [, setLocation] = useLocation();
-  const sessionId = getSessionId();
 
   const { data: allQuestions, isLoading: isQuestionsLoading } = useListQuestions(
     {},
@@ -38,8 +36,7 @@ export default function Home() {
   });
 
   const { data: profile, isLoading: isProfileLoading } = useGetProfile(
-    { sessionId },
-    { query: { queryKey: getGetProfileQueryKey({ sessionId }) } }
+    { query: { queryKey: getGetProfileQueryKey() } }
   );
 
   const answeredIds = useMemo(() => new Set(Object.keys(getAnsweredQuestions())), []);

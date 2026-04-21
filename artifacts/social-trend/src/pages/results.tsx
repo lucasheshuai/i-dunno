@@ -35,7 +35,6 @@ import {
   getAnsweredQuestions,
   getNextInSequence,
   setFeedCursor,
-  getSessionToken,
   type QuestionRef,
   type ClusterRef,
 } from "@/lib/store";
@@ -94,38 +93,17 @@ export default function ResultsPage() {
     query: { enabled: !!id, queryKey: getGetQuestionQueryKey(id || "") },
   });
 
-  // Fetch results using the server-issued bearer token for identity verification.
-  // The server checks the token signature and verifies the session has answered
-  // this question before returning results.  Returns 403 if not answered — in
-  // that case we redirect back to the question so the user can answer properly.
-  const { data: results, isLoading: isRLoading, error: resultsError } = useQuery<AggregatedResult>({
-    queryKey: [...getGetQuestionResultsQueryKey(id || ""), "auth"],
+  // Fetch results; the server uses the HttpOnly session cookie to verify the
+  // caller has already answered, unlocking the majorityAnswer field.
+  const { data: results, isLoading: isRLoading } = useQuery<AggregatedResult>({
+    queryKey: getGetQuestionResultsQueryKey(id || ""),
     queryFn: async ({ signal }) => {
-      const token = getSessionToken();
-      const headers: Record<string, string> = {};
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-      const res = await fetch(`/api/questions/${id}/results`, { signal, headers });
-      if (res.status === 403) {
-        throw Object.assign(new Error("not_answered"), { status: 403 });
-      }
+      const res = await fetch(`/api/questions/${id}/results`, { signal, credentials: "same-origin" });
       if (!res.ok) throw new Error("Failed to fetch results");
       return res.json() as Promise<AggregatedResult>;
     },
     enabled: !!id && hasOnboarded(),
-    retry: (failureCount, err) => {
-      const e = err as Error & { status?: number };
-      if (e.status === 403) return false;
-      return failureCount < 2;
-    },
   });
-
-  // If the server rejects with 403 (not answered), redirect to the question
-  useEffect(() => {
-    const e = resultsError as (Error & { status?: number }) | null;
-    if (e?.status === 403 && id) {
-      setLocation(`/question/${id}`);
-    }
-  }, [resultsError, id, setLocation]);
 
   const { data: allQuestions } = useListQuestions(
     {},

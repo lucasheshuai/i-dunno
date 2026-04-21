@@ -153,7 +153,6 @@ export const GetQuestionResultsResponse = zod.object({
  * @summary Submit a user answer and prediction
  */
 export const SubmitResponseBody = zod.object({
-  sessionId: zod.string(),
   questionId: zod.string(),
   answer: zod.string(),
   predictedMajority: zod.string(),
@@ -162,9 +161,7 @@ export const SubmitResponseBody = zod.object({
 /**
  * @summary Get user profile stats
  */
-export const GetProfileQueryParams = zod.object({
-  sessionId: zod.coerce.string(),
-});
+export const GetProfileQueryParams = zod.object({});
 
 export const GetProfileResponse = zod.object({
   sessionId: zod.string(),
@@ -191,7 +188,6 @@ export const GetProfileResponse = zod.object({
  * @summary Save user demographics
  */
 export const UpdateDemographicsBody = zod.object({
-  sessionId: zod.string(),
   nickname: zod.string().nullish(),
   ageRange: zod.string().nullish(),
   gender: zod.string().nullish(),
@@ -233,9 +229,7 @@ export const GetStatsResponse = zod.object({
 /**
  * @summary Get leaderboard rankings
  */
-export const GetLeaderboardQueryParams = zod.object({
-  sessionId: zod.coerce.string().optional(),
-});
+export const GetLeaderboardQueryParams = zod.object({});
 
 export const GetLeaderboardResponse = zod.object({
   entries: zod.array(

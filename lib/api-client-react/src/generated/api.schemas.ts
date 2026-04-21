@@ -84,7 +84,6 @@ export interface AggregatedResult {
 }
 
 export interface SubmitResponseBody {
-  sessionId: string;
   questionId: string;
   answer: string;
   predictedMajority: string;
@@ -121,7 +120,6 @@ export interface UserProfile {
 }
 
 export interface UpdateDemographicsBody {
-  sessionId: string;
   nickname?: string | null;
   ageRange?: string | null;
   gender?: string | null;
@@ -156,13 +154,9 @@ export type ListQuestionsParams = {
 };
 
 export type GetTodayQuestionParams = {
-  sessionId?: string;
+  category?: string;
 };
 
-export type GetProfileParams = {
-  sessionId: string;
-};
+export type GetProfileParams = Record<string, never>;
 
-export type GetLeaderboardParams = {
-  sessionId?: string;
-};
+export type GetLeaderboardParams = Record<string, never>;

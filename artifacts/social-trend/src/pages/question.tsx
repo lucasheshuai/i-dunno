@@ -4,14 +4,13 @@ import { useGetQuestion, getGetQuestionQueryKey, useGetProfile, getGetProfileQue
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import { setFlowAnswer, isQuestionAnswered, getResponse, getSessionId } from "@/lib/store";
+import { setFlowAnswer, isQuestionAnswered, getResponse } from "@/lib/store";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 
 export default function QuestionPage() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const sessionId = getSessionId();
 
   const { data: question, isLoading } = useGetQuestion(id || "", {
     query: {
@@ -21,8 +20,7 @@ export default function QuestionPage() {
   });
 
   const { data: profile } = useGetProfile(
-    { sessionId },
-    { query: { queryKey: getGetProfileQueryKey({ sessionId }) } }
+    { query: { queryKey: getGetProfileQueryKey() } }
   );
 
   const serverAnsweredIds = useMemo(

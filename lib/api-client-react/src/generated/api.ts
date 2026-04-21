@@ -20,8 +20,6 @@ import type {
   AggregatedResult,
   AppStats,
   ErrorResponse,
-  GetLeaderboardParams,
-  GetProfileParams,
   GetTodayQuestionParams,
   HealthStatus,
   LeaderboardResponse,
@@ -647,57 +645,41 @@ export const useSubmitResponse = <
 /**
  * @summary Get user profile stats
  */
-export const getGetProfileUrl = (params: GetProfileParams) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString());
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0
-    ? `/api/profile?${stringifiedParams}`
-    : `/api/profile`;
+export const getGetProfileUrl = () => {
+  return `/api/profile`;
 };
 
 export const getProfile = async (
-  params: GetProfileParams,
   options?: RequestInit,
 ): Promise<UserProfile> => {
-  return customFetch<UserProfile>(getGetProfileUrl(params), {
+  return customFetch<UserProfile>(getGetProfileUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetProfileQueryKey = (params?: GetProfileParams) => {
-  return [`/api/profile`, ...(params ? [params] : [])] as const;
+export const getGetProfileQueryKey = () => {
+  return [`/api/profile`] as const;
 };
 
 export const getGetProfileQueryOptions = <
   TData = Awaited<ReturnType<typeof getProfile>>,
   TError = ErrorType<unknown>,
->(
-  params: GetProfileParams,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof getProfile>>,
-      TError,
-      TData
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getProfile>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetProfileQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getGetProfileQueryKey();
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getProfile>>> = ({
     signal,
-  }) => getProfile(params, { signal, ...requestOptions });
+  }) => getProfile({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getProfile>>,
@@ -718,18 +700,15 @@ export type GetProfileQueryError = ErrorType<unknown>;
 export function useGetProfile<
   TData = Awaited<ReturnType<typeof getProfile>>,
   TError = ErrorType<unknown>,
->(
-  params: GetProfileParams,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof getProfile>>,
-      TError,
-      TData
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetProfileQueryOptions(params, options);
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getProfile>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetProfileQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -892,57 +871,41 @@ export function useGetStats<
 /**
  * @summary Get leaderboard rankings
  */
-export const getGetLeaderboardUrl = (params?: GetLeaderboardParams) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString());
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0
-    ? `/api/leaderboard?${stringifiedParams}`
-    : `/api/leaderboard`;
+export const getGetLeaderboardUrl = () => {
+  return `/api/leaderboard`;
 };
 
 export const getLeaderboard = async (
-  params?: GetLeaderboardParams,
   options?: RequestInit,
 ): Promise<LeaderboardResponse> => {
-  return customFetch<LeaderboardResponse>(getGetLeaderboardUrl(params), {
+  return customFetch<LeaderboardResponse>(getGetLeaderboardUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetLeaderboardQueryKey = (params?: GetLeaderboardParams) => {
-  return [`/api/leaderboard`, ...(params ? [params] : [])] as const;
+export const getGetLeaderboardQueryKey = () => {
+  return [`/api/leaderboard`] as const;
 };
 
 export const getGetLeaderboardQueryOptions = <
   TData = Awaited<ReturnType<typeof getLeaderboard>>,
   TError = ErrorType<unknown>,
->(
-  params?: GetLeaderboardParams,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof getLeaderboard>>,
-      TError,
-      TData
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getLeaderboard>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetLeaderboardQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getGetLeaderboardQueryKey();
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getLeaderboard>>> = ({
     signal,
-  }) => getLeaderboard(params, { signal, ...requestOptions });
+  }) => getLeaderboard({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getLeaderboard>>,
@@ -963,18 +926,15 @@ export type GetLeaderboardQueryError = ErrorType<unknown>;
 export function useGetLeaderboard<
   TData = Awaited<ReturnType<typeof getLeaderboard>>,
   TError = ErrorType<unknown>,
->(
-  params?: GetLeaderboardParams,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof getLeaderboard>>,
-      TError,
-      TData
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetLeaderboardQueryOptions(params, options);
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getLeaderboard>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetLeaderboardQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

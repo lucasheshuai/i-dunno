@@ -1,49 +1,29 @@
 
-/** Returns the cached server-issued session ID, or empty string if not yet initialized. */
-export const getSessionId = (): string => {
-  return localStorage.getItem('st_session_id') ?? '';
-};
+// ─── Session Reset ────────────────────────────────────────────────────────────
 
-/** Returns the cached server-issued bearer token, or null if not yet initialized. */
-export const getSessionToken = (): string | null => {
-  return localStorage.getItem('st_session_token');
-};
+const LOCAL_STORAGE_KEYS = ['st_session_id', 'st_onboarded', 'st_answered'];
 
-/**
- * Initialize a server-issued session if one doesn't already exist.
- *
- * Uses a challenge-response flow:
- * 1. GET /api/sessions/challenge → fresh signed challenge token
- * 2. POST /api/sessions { challenge } → server creates session, returns {sessionId, token}
- *
- * The mandatory round-trip prevents offline/pre-computed session minting.
- * Must be called once on app startup before any write operations.
- */
-export const initSession = async (): Promise<void> => {
-  const existingId = localStorage.getItem('st_session_id');
-  const existingToken = localStorage.getItem('st_session_token');
-  if (existingId && existingToken) return; // already initialized
+const SESSION_STORAGE_KEYS = [
+  'st_demographics_shared',
+  'st_demographics',
+  'st_history',
+  'st_nickname',
+  'st_feed_cursor',
+  'st_profile_signals',
+];
 
-  try {
-    // Step 1: obtain a one-time challenge from the server
-    const challengeResp = await fetch('/api/sessions/challenge');
-    if (!challengeResp.ok) return;
-    const { challenge } = (await challengeResp.json()) as { challenge: string };
-
-    // Step 2: create the session using the challenge
-    const sessionResp = await fetch('/api/sessions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ challenge }),
-    });
-    if (!sessionResp.ok) return;
-    const { sessionId, token } = (await sessionResp.json()) as { sessionId: string; token: string };
-    localStorage.setItem('st_session_id', sessionId);
-    localStorage.setItem('st_session_token', token);
-  } catch {
-    // Network error: writes will fail with 401 until the session is initialized
+export const clearSession = async (): Promise<void> => {
+  await fetch('/api/session/reset', { method: 'POST' }).catch(() => {});
+  for (const key of LOCAL_STORAGE_KEYS) {
+    localStorage.removeItem(key);
   }
+  for (const key of SESSION_STORAGE_KEYS) {
+    sessionStorage.removeItem(key);
+  }
+  window.location.href = '/';
 };
+
+// ─── Onboarding flag (non-sensitive UX flag, kept in localStorage) ────────────
 
 export const hasOnboarded = () => {
   return localStorage.getItem('st_onboarded') === 'true';
@@ -53,12 +33,14 @@ export const setOnboarded = () => {
   localStorage.setItem('st_onboarded', 'true');
 };
 
+// ─── Demographics (sensitive — sessionStorage, cleared on browser close) ──────
+
 export const hasSharedDemographics = () => {
-  return localStorage.getItem('st_demographics_shared') === 'true';
+  return sessionStorage.getItem('st_demographics_shared') === 'true';
 };
 
 export const setDemographicsShared = () => {
-  localStorage.setItem('st_demographics_shared', 'true');
+  sessionStorage.setItem('st_demographics_shared', 'true');
 };
 
 export interface Demographics {
@@ -70,15 +52,17 @@ export interface Demographics {
 
 export const getDemographics = (): Demographics => {
   try {
-    return JSON.parse(localStorage.getItem('st_demographics') || '{}');
+    return JSON.parse(sessionStorage.getItem('st_demographics') || '{}');
   } catch {
     return {};
   }
 };
 
 export const saveDemographics = (d: Demographics) => {
-  localStorage.setItem('st_demographics', JSON.stringify(d));
+  sessionStorage.setItem('st_demographics', JSON.stringify(d));
 };
+
+// ─── Answered questions (non-PII question IDs; synced from server on load) ────
 
 export const getAnsweredQuestions = (): Record<string, boolean> => {
   try {
@@ -110,7 +94,8 @@ export const getAnswerCount = (): number => {
   return Object.keys(getAnsweredQuestions()).length;
 };
 
-// Answer/prediction history persisted in localStorage so it survives page reload
+// ─── Answer/prediction history (sensitive — sessionStorage) ───────────────────
+
 export interface ResponseRecord {
   questionId: string;
   answer: string;
@@ -119,14 +104,14 @@ export interface ResponseRecord {
 
 const getHistory = (): Record<string, ResponseRecord> => {
   try {
-    return JSON.parse(localStorage.getItem('st_history') || '{}');
+    return JSON.parse(sessionStorage.getItem('st_history') || '{}');
   } catch {
     return {};
   }
 };
 
 const saveHistory = (history: Record<string, ResponseRecord>) => {
-  localStorage.setItem('st_history', JSON.stringify(history));
+  sessionStorage.setItem('st_history', JSON.stringify(history));
 };
 
 export const saveResponse = (questionId: string, answer: string, prediction: string) => {
@@ -141,11 +126,11 @@ export const getResponse = (questionId: string): ResponseRecord | null => {
 
 export const getRecentResponses = (n: number): ResponseRecord[] => {
   const history = getHistory();
-  // Return the last N entries; insertion order is preserved in JS objects
   return Object.values(history).slice(-n);
 };
 
-// In-memory flow state for current in-progress question (answer before prediction submitted)
+// ─── In-memory flow state for current in-progress question ───────────────────
+
 export const flowState: Record<string, { answer?: string; prediction?: string }> = {};
 
 export const setFlowAnswer = (questionId: string, answer: string) => {
@@ -156,7 +141,6 @@ export const setFlowAnswer = (questionId: string, answer: string) => {
 export const setFlowPrediction = (questionId: string, prediction: string) => {
   if (!flowState[questionId]) flowState[questionId] = {};
   flowState[questionId].prediction = prediction;
-  // Persist to history once prediction is set (answer should already be in flowState)
   const answer = flowState[questionId].answer;
   if (answer) {
     saveResponse(questionId, answer, prediction);
@@ -164,11 +148,9 @@ export const setFlowPrediction = (questionId: string, prediction: string) => {
 };
 
 export const getFlowState = (questionId: string): { answer?: string; prediction?: string } => {
-  // First check in-memory state (active flow)
   if (flowState[questionId]?.answer || flowState[questionId]?.prediction) {
     return flowState[questionId];
   }
-  // Fall back to persisted history (after page reload)
   const record = getResponse(questionId);
   if (record) {
     return { answer: record.answer, prediction: record.prediction };
@@ -180,15 +162,17 @@ export const clearFlowState = (questionId: string) => {
   delete flowState[questionId];
 };
 
+// ─── Nickname (sensitive — sessionStorage) ────────────────────────────────────
+
 export const getNickname = (): string | null => {
-  return localStorage.getItem('st_nickname');
+  return sessionStorage.getItem('st_nickname');
 };
 
 export const setNickname = (name: string): void => {
-  localStorage.setItem('st_nickname', name);
+  sessionStorage.setItem('st_nickname', name);
 };
 
-// ─── Feed cursor (persisted position in the cluster-sequential feed) ──────────
+// ─── Feed cursor (session-specific position — sessionStorage) ─────────────────
 
 export interface FeedCursor {
   clusterId: string;
@@ -197,7 +181,7 @@ export interface FeedCursor {
 
 export const getFeedCursor = (): FeedCursor | null => {
   try {
-    const raw = localStorage.getItem('st_feed_cursor');
+    const raw = sessionStorage.getItem('st_feed_cursor');
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -205,14 +189,14 @@ export const getFeedCursor = (): FeedCursor | null => {
 };
 
 export const setFeedCursor = (clusterId: string, questionId: string): void => {
-  localStorage.setItem('st_feed_cursor', JSON.stringify({ clusterId, questionId }));
+  sessionStorage.setItem('st_feed_cursor', JSON.stringify({ clusterId, questionId }));
 };
 
 export const clearFeedCursor = (): void => {
-  localStorage.removeItem('st_feed_cursor');
+  sessionStorage.removeItem('st_feed_cursor');
 };
 
-// ─── Profile Signal Accumulation ─────────────────────────────────────────────
+// ─── Profile Signal Accumulation (sensitive — sessionStorage) ─────────────────
 
 const SIGNAL_LABELS: Record<string, string> = {
   romantic: 'Hopeless Romantic',
@@ -226,7 +210,7 @@ const SIGNAL_LABELS: Record<string, string> = {
 
 const getStoredProfileSignals = (): Record<string, string[]> => {
   try {
-    return JSON.parse(localStorage.getItem('st_profile_signals') || '{}');
+    return JSON.parse(sessionStorage.getItem('st_profile_signals') || '{}');
   } catch {
     return {};
   }
@@ -235,7 +219,7 @@ const getStoredProfileSignals = (): Record<string, string[]> => {
 export const recordProfileSignals = (questionId: string, signals: string[]) => {
   const stored = getStoredProfileSignals();
   stored[questionId] = signals;
-  localStorage.setItem('st_profile_signals', JSON.stringify(stored));
+  sessionStorage.setItem('st_profile_signals', JSON.stringify(stored));
 };
 
 export const getProfileSignalCounts = (): Record<string, number> => {
@@ -280,8 +264,6 @@ export interface NextInSequenceResult {
   completedCluster?: ClusterRef;
 }
 
-// Returns the globally next unanswered question across all clusters
-// using the API-provided cluster ordering (clusters array order is canonical)
 export const getNextQuestion = (
   questions: QuestionRef[],
   clusters: ClusterRef[],
@@ -311,7 +293,6 @@ export const getNextInSequence = (
     .filter(q => q.topicClusterId === currentClusterId)
     .sort((a, b) => a.clusterOrder - b.clusterOrder);
 
-  // The current question just got answered, so include it in the answered set
   const allAnswered = new Set([...answeredIds, currentId]);
 
   const allClusterDone = currentClusterQuestions.every(q => allAnswered.has(q.id));
@@ -321,10 +302,7 @@ export const getNextInSequence = (
     if (nextInCluster) return { next: nextInCluster, clusterComplete: false };
   }
 
-  // Cluster is complete — find the completed cluster meta
   const completedCluster = clusters.find(c => c.id === currentClusterId);
-
-  // Use API-provided cluster order (clusters array order is canonical — no sorting by id)
   const currentIdx = clusters.findIndex(c => c.id === currentClusterId);
 
   for (let i = currentIdx + 1; i < clusters.length; i++) {

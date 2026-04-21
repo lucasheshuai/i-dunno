@@ -1,7 +1,6 @@
 import { Router, type IRouter } from "express";
 import { questions, mockResults } from "../lib/seed-data";
 import { getAnsweredQuestionIds } from "../lib/session-store";
-import { extractSessionFromBearer } from "../lib/session-token";
 import {
   ListQuestionsQueryParams,
   GetQuestionParams,
@@ -26,19 +25,17 @@ router.get("/questions", async (req, res): Promise<void> => {
 });
 
 router.get("/questions/today", async (req, res): Promise<void> => {
-  const sessionId = typeof req.query.sessionId === "string" ? req.query.sessionId : null;
+  const sessionId = req.sessionId;
   const active = questions.filter((q) => q.status === "active");
   const c1Questions = active
     .filter((q) => q.topicClusterId === "c1")
     .sort((a, b) => a.clusterOrder - b.clusterOrder);
 
-  if (sessionId) {
-    const answeredIds = await getAnsweredQuestionIds(sessionId);
-    const firstUnanswered = c1Questions.find((q) => !answeredIds.has(q.id));
-    if (firstUnanswered) {
-      res.json(firstUnanswered);
-      return;
-    }
+  const answeredIds = await getAnsweredQuestionIds(sessionId);
+  const firstUnanswered = c1Questions.find((q) => !answeredIds.has(q.id));
+  if (firstUnanswered) {
+    res.json(firstUnanswered);
+    return;
   }
 
   res.json(c1Questions[0] ?? active[0]);
@@ -81,21 +78,20 @@ router.get("/questions/:id/results", async (req, res): Promise<void> => {
     return;
   }
 
-  // Results are gated behind authenticated session identity: the caller must
-  // present a valid server-issued bearer token AND that session must have already
-  // answered this question.  Using the bearer token (rather than a plain query
-  // param) ensures session identity is tied to server-issued proof — an attacker
-  // cannot harvest results by constructing arbitrary sessionId values.
-  const sessionId = extractSessionFromBearer(req.headers.authorization);
-  if (sessionId) {
-    const answeredIds = await getAnsweredQuestionIds(sessionId);
-    if (answeredIds.has(params.data.id)) {
-      res.json(result);
-      return;
-    }
+  // Only reveal majorityAnswer (the prediction answer key) after the caller has
+  // committed their own answer. This prevents scripted requests from reading the
+  // answer key before submitting, which would trivially game prediction scoring.
+  // Identity comes from the server-issued HttpOnly cookie (req.sessionId).
+  const answeredIds = await getAnsweredQuestionIds(req.sessionId);
+  if (answeredIds.has(params.data.id)) {
+    res.json(result);
+    return;
   }
 
-  res.status(403).json({ error: "You must answer this question before viewing results" });
+  // Session hasn't answered yet: return distribution and segment data for
+  // preview purposes but strip the majority answer key.
+  const { majorityAnswer: _redacted, ...safeResult } = result;
+  res.json({ ...safeResult, majorityAnswer: null });
 });
 
 export default router;
